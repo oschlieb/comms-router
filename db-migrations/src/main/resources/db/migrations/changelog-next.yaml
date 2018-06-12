@@ -1,0 +1,859 @@
+databaseChangeLog:
+- changeSet:
+    id: 1524155226901-1
+    author: oschlieben (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              primaryKey: true
+            name: id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: ref
+            type: VARCHAR(255)
+        - column:
+            name: version
+            type: INT
+        - column:
+            name: router_id
+            type: BIGINT
+        - column:
+            name: address
+            type: VARCHAR(255)
+        - column:
+            name: last_time_at_busy_state
+            type: TIMESTAMP(19)
+        - column:
+            name: state
+            type: VARCHAR(255)
+        - column:
+            name: capabilities_attribute_group_id
+            type: BIGINT
+        - column:
+            name: name
+            type: VARCHAR(255)
+        - column:
+            name: description
+            type: VARCHAR(255)
+        tableName: agent
+- changeSet:
+    id: 1524155226901-2
+    author: oschlieben (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+            name: agent_id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: queue_id
+            type: BIGINT
+        tableName: agent_queue
+- changeSet:
+    id: 1524155226901-3
+    author: oschlieben (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              primaryKey: true
+            name: id
+            type: BIGINT
+        - column:
+            name: boolean_value
+            type: BIT(1)
+        - column:
+            name: double_value
+            type: DOUBLE
+        - column:
+            name: name
+            type: VARCHAR(255)
+        - column:
+            name: string_value
+            type: VARCHAR(255)
+        - column:
+            name: attribute_group_id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            defaultValueBoolean: true
+            name: is_scalar
+            type: BIT(1)
+        tableName: attribute
+- changeSet:
+    id: 1524155226901-4
+    author: oschlieben (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              primaryKey: true
+            name: id
+            type: BIGINT
+        tableName: attribute_group
+- changeSet:
+    id: 1524155226901-5
+    author: oschlieben (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              primaryKey: true
+            name: id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: ref
+            type: VARCHAR(255)
+        - column:
+            name: version
+            type: INT
+        - column:
+            name: router_id
+            type: BIGINT
+        - column:
+            name: description
+            type: VARCHAR(255)
+        - column:
+            name: default_route
+            type: BIGINT
+        tableName: plan
+- changeSet:
+    id: 1524155226901-6
+    author: oschlieben (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              primaryKey: true
+            name: id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: ref
+            type: VARCHAR(255)
+        - column:
+            name: version
+            type: INT
+        - column:
+            name: router_id
+            type: BIGINT
+        - column:
+            name: description
+            type: VARCHAR(255)
+        - column:
+            name: predicate
+            type: VARCHAR(255)
+        tableName: queue
+- changeSet:
+    id: 1524155226901-7
+    author: oschlieben (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              primaryKey: true
+            name: id
+            type: BIGINT
+        - column:
+            name: task_priority
+            type: BIGINT
+        - column:
+            name: queue_id
+            type: BIGINT
+        - column:
+            name: queued_task_timeout
+            type: BIGINT
+        - column:
+            name: plan_id
+            type: BIGINT
+        - column:
+            name: rule_id
+            type: BIGINT
+        - column:
+            name: route_order
+            type: INT
+        tableName: route
+- changeSet:
+    id: 1524155226901-8
+    author: oschlieben (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              primaryKey: true
+            name: id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: ref
+            type: VARCHAR(255)
+        - column:
+            name: version
+            type: INT
+        - column:
+            name: description
+            type: VARCHAR(255)
+        - column:
+            name: name
+            type: VARCHAR(255)
+        tableName: router
+- changeSet:
+    id: 1524155226901-9
+    author: oschlieben (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+            name: router_id
+            type: BIGINT
+        tableName: router_config
+- changeSet:
+    id: 1524155226901-10
+    author: oschlieben (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              primaryKey: true
+            name: id
+            type: BIGINT
+        - column:
+            name: predicate
+            type: VARCHAR(255)
+        - column:
+            name: tag
+            type: VARCHAR(255)
+        - column:
+            name: plan_id
+            type: BIGINT
+        - column:
+            name: rule_order
+            type: INT
+        tableName: rule
+- changeSet:
+    id: 1524155226901-11
+    author: oschlieben (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              primaryKey: true
+            name: id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: ref
+            type: VARCHAR(255)
+        - column:
+            name: version
+            type: INT
+        - column:
+            name: router_id
+            type: BIGINT
+        - column:
+            name: callback_url
+            type: VARCHAR(255)
+        - column:
+            name: create_date
+            type: TIMESTAMP(19)
+        - column:
+            constraints:
+              nullable: false
+            name: priority
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: timeout
+            type: BIGINT
+        - column:
+            name: state
+            type: VARCHAR(255)
+        - column:
+            name: update_date
+            type: TIMESTAMP(19)
+        - column:
+            name: agent_id
+            type: BIGINT
+        - column:
+            name: current_route
+            type: BIGINT
+        - column:
+            name: queue_id
+            type: BIGINT
+        - column:
+            name: requirements_attribute_group_id
+            type: BIGINT
+        - column:
+            name: rule_id
+            type: BIGINT
+        - column:
+            name: user_context_attribute_group_id
+            type: BIGINT
+        - column:
+            name: expiration_date
+            type: TIMESTAMP(19)
+        - column:
+            name: tag
+            type: VARCHAR(255)
+        tableName: task
+- changeSet:
+    id: 1524155226901-12
+    author: oschlieben (generated)
+    changes:
+    - addPrimaryKey:
+        columnNames: router_id
+        constraintName: PRIMARY
+        tableName: router_config
+- changeSet:
+    id: 1524155226901-13
+    author: oschlieben (generated)
+    changes:
+    - addUniqueConstraint:
+        columnNames: router_id, ref
+        constraintName: agent_unique_router_ref
+        tableName: agent
+- changeSet:
+    id: 1524155226901-14
+    author: oschlieben (generated)
+    changes:
+    - addUniqueConstraint:
+        columnNames: router_id, ref
+        constraintName: plan_unique_router_ref
+        tableName: plan
+- changeSet:
+    id: 1524155226901-15
+    author: oschlieben (generated)
+    changes:
+    - addUniqueConstraint:
+        columnNames: router_id, ref
+        constraintName: queue_unique_router_ref
+        tableName: queue
+- changeSet:
+    id: 1524155226901-16
+    author: oschlieben (generated)
+    changes:
+    - addUniqueConstraint:
+        columnNames: ref
+        constraintName: router_unique_ref
+        tableName: router
+- changeSet:
+    id: 1524155226901-17
+    author: oschlieben (generated)
+    changes:
+    - addUniqueConstraint:
+        columnNames: router_id, tag
+        constraintName: task_tag_index
+        tableName: task
+- changeSet:
+    id: 1524155226901-18
+    author: oschlieben (generated)
+    changes:
+    - addUniqueConstraint:
+        columnNames: router_id, ref
+        constraintName: task_unique_router_ref
+        tableName: task
+- changeSet:
+    id: 1524155226901-19
+    author: oschlieben (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: user_context_attribute_group_id
+        indexName: FK6xtron4xc20182miiwp62yo91
+        tableName: task
+- changeSet:
+    id: 1524155226901-20
+    author: oschlieben (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: current_route
+        indexName: FK8103jdlef2vbewh2ivx8bjdrj
+        tableName: task
+- changeSet:
+    id: 1524155226901-21
+    author: oschlieben (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: requirements_attribute_group_id
+        indexName: FK9rhh5b0u2yt2qbhfwna10xn00
+        tableName: task
+- changeSet:
+    id: 1524155226901-22
+    author: oschlieben (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: agent_id
+        indexName: FK9w6soi9vd3ys91fmnd4xlx5os
+        tableName: task
+- changeSet:
+    id: 1524155226901-23
+    author: oschlieben (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: capabilities_attribute_group_id
+        indexName: FKc48ete3lfauerkuko5gise7xw
+        tableName: agent
+- changeSet:
+    id: 1524155226901-24
+    author: oschlieben (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: attribute_group_id
+        indexName: FKc9knp9aomud6g3kcd8dyycsm2
+        tableName: attribute
+- changeSet:
+    id: 1524155226901-25
+    author: oschlieben (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: plan_id
+        indexName: FKd5ec716qndoletp9gk5m34t
+        tableName: rule
+- changeSet:
+    id: 1524155226901-26
+    author: oschlieben (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: default_route
+        indexName: FKdlm836kba70o07gonejoo8usi
+        tableName: plan
+- changeSet:
+    id: 1524155226901-27
+    author: oschlieben (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: queue_id
+        indexName: FKhee0wu4107ncs84mq9968tbx2
+        tableName: task
+- changeSet:
+    id: 1524155226901-28
+    author: oschlieben (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: plan_id
+        indexName: FKiriymbg09d9dbihd9lu1m3lkk
+        tableName: route
+- changeSet:
+    id: 1524155226901-29
+    author: oschlieben (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: queue_id
+        indexName: FKmf9qpp9pfneo67leq6uej5vhj
+        tableName: agent_queue
+- changeSet:
+    id: 1524155226901-30
+    author: oschlieben (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: rule_id
+        indexName: FKmtfa191vvsxa6ydppu21xlqt2
+        tableName: task
+- changeSet:
+    id: 1524155226901-31
+    author: oschlieben (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: agent_id
+        indexName: FKoqsbnajicmn8xqc85py0ph6ap
+        tableName: agent_queue
+- changeSet:
+    id: 1524155226901-32
+    author: oschlieben (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: rule_id
+        indexName: FKrjo8av3i8uyl874oesxmy87k7
+        tableName: route
+- changeSet:
+    id: 1524155226901-33
+    author: oschlieben (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: router_id
+        indexName: fkidx_agent__router
+        tableName: agent
+- changeSet:
+    id: 1524155226901-34
+    author: oschlieben (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: router_id
+        indexName: fkidx_plan__router
+        tableName: plan
+- changeSet:
+    id: 1524155226901-35
+    author: oschlieben (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: router_id
+        indexName: fkidx_queue__router
+        tableName: queue
+- changeSet:
+    id: 1524155226901-36
+    author: oschlieben (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: queue_id
+        indexName: fkidx_route__queue
+        tableName: route
+- changeSet:
+    id: 1524155226901-37
+    author: oschlieben (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: router_id
+        indexName: fkidx_task__router
+        tableName: task
+- changeSet:
+    id: 1524155226901-38
+    author: oschlieben (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: user_context_attribute_group_id
+        baseTableName: task
+        constraintName: FK6xtron4xc20182miiwp62yo91
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: attribute_group
+- changeSet:
+    id: 1524155226901-39
+    author: oschlieben (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: current_route
+        baseTableName: task
+        constraintName: FK8103jdlef2vbewh2ivx8bjdrj
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: route
+- changeSet:
+    id: 1524155226901-40
+    author: oschlieben (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: requirements_attribute_group_id
+        baseTableName: task
+        constraintName: FK9rhh5b0u2yt2qbhfwna10xn00
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: attribute_group
+- changeSet:
+    id: 1524155226901-41
+    author: oschlieben (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: attribute_group_id
+        baseTableName: attribute
+        constraintName: FKc9knp9aomud6g3kcd8dyycsm2
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: attribute_group
+- changeSet:
+    id: 1524155226901-42
+    author: oschlieben (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: plan_id
+        baseTableName: rule
+        constraintName: FKd5ec716qndoletp9gk5m34t
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: plan
+- changeSet:
+    id: 1524155226901-43
+    author: oschlieben (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: default_route
+        baseTableName: plan
+        constraintName: FKdlm836kba70o07gonejoo8usi
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: route
+- changeSet:
+    id: 1524155226901-44
+    author: oschlieben (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: plan_id
+        baseTableName: route
+        constraintName: FKiriymbg09d9dbihd9lu1m3lkk
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: plan
+- changeSet:
+    id: 1524155226901-45
+    author: oschlieben (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: rule_id
+        baseTableName: task
+        constraintName: FKmtfa191vvsxa6ydppu21xlqt2
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: rule
+- changeSet:
+    id: 1524155226901-46
+    author: oschlieben (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: rule_id
+        baseTableName: route
+        constraintName: FKrjo8av3i8uyl874oesxmy87k7
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: rule
+- changeSet:
+    id: 1524155226901-47
+    author: oschlieben (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: capabilities_attribute_group_id
+        baseTableName: agent
+        constraintName: fk_agent__capabilities__attribute_group
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: attribute_group
+- changeSet:
+    id: 1524155226901-48
+    author: oschlieben (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: router_id
+        baseTableName: agent
+        constraintName: fk_agent__router
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: router
+- changeSet:
+    id: 1524155226901-49
+    author: oschlieben (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: agent_id
+        baseTableName: agent_queue
+        constraintName: fk_agent_queue__agent
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: CASCADE
+        onUpdate: CASCADE
+        referencedColumnNames: id
+        referencedTableName: agent
+- changeSet:
+    id: 1524155226901-50
+    author: oschlieben (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: queue_id
+        baseTableName: agent_queue
+        constraintName: fk_agent_queue__queue
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: CASCADE
+        onUpdate: CASCADE
+        referencedColumnNames: id
+        referencedTableName: queue
+- changeSet:
+    id: 1524155226901-51
+    author: oschlieben (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: router_id
+        baseTableName: plan
+        constraintName: fk_plan__router
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: router
+- changeSet:
+    id: 1524155226901-52
+    author: oschlieben (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: router_id
+        baseTableName: queue
+        constraintName: fk_queue__router
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: router
+- changeSet:
+    id: 1524155226901-53
+    author: oschlieben (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: queue_id
+        baseTableName: route
+        constraintName: fk_route__queue
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: queue
+- changeSet:
+    id: 1524155226901-54
+    author: oschlieben (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: router_id
+        baseTableName: router_config
+        constraintName: fk_router_config__router
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: CASCADE
+        onUpdate: CASCADE
+        referencedColumnNames: id
+        referencedTableName: router
+- changeSet:
+    id: 1524155226901-55
+    author: oschlieben (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: agent_id
+        baseTableName: task
+        constraintName: fk_task__agent
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: agent
+- changeSet:
+    id: 1524155226901-56
+    author: oschlieben (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: queue_id
+        baseTableName: task
+        constraintName: fk_task__queue
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: queue
+- changeSet:
+    id: 1524155226901-57
+    author: oschlieben (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: router_id
+        baseTableName: task
+        constraintName: fk_task__router
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: router
+

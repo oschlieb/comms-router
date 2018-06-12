@@ -1,69 +1,110 @@
-# Comms Router
+# Introduction to Comms Router
+The Nexmo Comms Router API enables businesses to leverage self-hosted or on premises APIs to manage Contact Centre task management. The modern Contact Center is designed to be flexible and extensible through allowing developers to customise integrations and leverage Nexmo Comms Router API as a key building block.
 
-## Overview
+As part of the Contact Center building blocks architecture this documentation also includes:
+* A [Demo Application](demo-application/README.md) to show how to apply the API in a Contact Center use case.
+* A [Graphical User Interface Application](gui-application/README.md) to enable admins to manage agents.
 
-Comms Router implements routing tasks to agents for handling. Routing is based on skills needed for the tasks and capabilities of the agents.
+# Pre-requisites
+* Nexmo [Account](https://dashboard.nexmo.com/sign-up)
+* Nexmo [Phone Numbers](https://developer.nexmo.com/account/guides/numbers)
+* Nexmo [Voice API](https://developer.nexmo.com/voice/voice-api/overview)
+* Nexmo Comms Router API
 
-A [demo application](demo-application/README.md) shows how to apply the router to build a call center.
+# Key Concepts
+* Customer - User that is initating the contact creaing the task that is then routed to an agent through a queue.
+* Router - The parent container to join all of the router entities tasks, agents, queues and plans.
+* Plans - Construct that manages multiple Queues, priority of tasks in against queues and failover if a queue has no available Agents to receive a task.
+* Queues - A bucket to collect tasks waiting for the next available agent. The Task is routed to a queue based on conditional logic (predicate) predefined by the customer requirements for example if they require to be routed to speak to an agent with a specific skill like language.
+* Agents - An endpoint or phyiscal agent able to handle tasks, characterized by its capabilities or assigned skills it has based on key value pairs set.
+* Capabilities - Conditional logic assigned to agents and queues to route tasks. These are made of key value pairs or arrays, single or multiple value conditions
+* Tasks - A work item characterized by its capabilities for example a set of skills an Agent requires to have a task routed to them based on key value pairs set.
+  
+# Features
+* Agent capabilities can by text, numeric integars or ranges, boolean key value pairs or an array of strings.
+* Agent availability can be set to `offline`, `ready`, `busy`, `unavailable` and is updated to `busy` based on if a task has been assigned to them.
+* Within the plans it is possible to manage priority order of queues, priority of a task and timeout of a task to enable failover to another queue.
 
-### Concepts
+# Customer Journey Flows
 
-  * Task - work item characterized by its requirements - set of skills needed expressed by the user as key/value pairs.
-  * Agent - abstract entity able to handle tasks, characterized by its capabilities - the skills it has expressed by the user as key/value pairs.
-  * Queue - collection of tasks waiting for the next available agent. It has a predicate defined by the user that is matched agains the agents' skills to select these able to serve the queue.
-  * Plan - defines how a task is handled by the router selecting a queue for it.
-  * Router - a container for the router entities allowing different user application to share the same database.
+## Callback Voice Call (PSTN):
+1. Customer submits an online callback request form
+2. Form submitted to server application
+3. Task is created with routing requirements from Customer request
+4. Available Agent is found with matching skills
+5. Agent accepts reservation and dials customer phone number (PSTN)
+6. Call is initiated and connects the Agent to the Customer
 
-### How it works
+![Callback a Customer using Voice over PSTN](to_do.png)
 
-User application creates a router and then one or more queues, agents and plans.
+## Inbound Voice Call (PSTN):
+1. Customer calls Nexmo phone number
+2. Client receives request via Webhook
+3. Predefined IVR option selected by Customer
+4. Client receives IVR option from Voice API
+5. Comms Router task created from client
+6. Available agent found with matching criteria
+7. Agent accepts request
+8. Customer connected to agent
 
-Then the application calls the router to creates a task with its requirements and either places it in a queue or assigns a plan to it.
+![Customer Journey Inbound Call](to_do.png)
 
-The plan contains list of rules, which the router executes in order. First rule which predicate matches the task requirements determines the queue for this task.
+## Agent Management and Real-Time Tasks Dashboard:
+Manage agents availability, phone numbers, skills, queues and plans within a Dashboard application. View tasks associated with queues in real-time and manage skills of agents and their availbility.
 
-When an agent become available for this task, it is put into state "busy" and the callback URL provided by the user for this task is called with information about the task and the selected agent.
+![Agent Management Dashboard](to_do.png)
 
-The user's application then informs the agent about the task and tracks the task's completion. When the task is done, the user's application changes the task's state within the router, which makes the agent available for subsequent tasks.
+# Installation
+Before installation, you’ll need the following from the [Nexmo Dashboard](https://dashboard.nexmo.com/sign-in). If you need to create an account [Sign up for a Nexmo](https://dashboard.nexmo.com/sign-up).
 
-## Installing the router
+* Your Nexmo API key and API secret which can be found on the Dashboard: https://dashboard.nexmo.com/settings
+* A Nexmo phone number, either [purchase one](https://dashboard.nexmo.com/buy-numbers) or you can use a number you have (already purchased)[https://dashboard.nexmo.com/your-numbers].
+* Create a [Nexmo Call Control Object](https://developer.nexmo.com/voice/voice-api/guides/ncco) (NCCO) with capabilities mapping to the IVR.
+* Enable a webhook for capturing events from your Voice Application during calls (this is optional).
+* Create a [Nexmo Voice Application](https://dashboard.nexmo.com/voice/create-application) to link you number, NCCO and webhook.
 
-### Requirements
+**Note:** It is recommended that you have an upgraded Nexmo account with credit before installation.
 
-  * Java - Oracle JDK/JRE 8 (build/runtime)
-  * Apache Maven - 3.5 (build)
-  * SQL Server - MySQL 5.7 (runtime)
-  * Java Servlet Container - Tomcat 8 (runtime)
+## Requirements
+* Java - Oracle JDK/JRE 8 (build/runtime)
+* Apache Maven - 3.5 (build)
+* SQL Server - MySQL 5.7 (runtime)
+* Java Servlet Container - Tomcat 8 (runtime)
 
-Although the software may work with different flavors of Java, SQL Server or Web Container, currently it is being tested with these listed above.
+The Comms Router API may work with different types of Java, SQL Server or Web Container and is currently being tested and maintained with the above component versions.
 
-### Build
+## Build
+* Install Java and Maven, clone the repo and execute: `mvn install`
+* The resulting war file should be: `web/target/comms-router-web.war`
 
-Install Java and Maven, clone the repo and execute:
+## Install
+* Create database for the router.
+* Create database user to be used by the router and grant this user access to the newly created database.
+* Configure JNDI data source with name `jdbc/commsRouterDB`.
 
-`mvn install`
+Read more information on [how to do set up Tomcat](docs/ConfiguringDatabaseAccess.md).
 
-The resulting war file should be:
+* Deploy `comms-router-web.war` into Tomcat.
+* Depending on your Tomcat settings this can be done by simple copying it to the Tomcat's webapps directory.
+* List routers: `curl http://localhost:8080/comms-router-web/api/routers`
 
-`web/target/comms-router-web.war`
+# Additional resources
 
-### Install
+  * Browse [docs](docs) directory for additional documentation.
+  * See our [demo application](demo-application/README.md) as an example how to integrate the router with Nexmo API]
 
-Create database for the router.
 
-Create DB user to be used by the router and grant this user access to the newly created database.
 
-Configure JNDI data source with name "jdbc/commsRouterDB".
-Details on how to do this in Tomcat can be found [here](docs/ConfiguringDatabaseAccess.md).
 
-Deploy comms-router-web.war into Tomcat.
-Depending on your Tomcat settings this can be done by simple copying it to the Tomcat's webapps directory.
 
-### Test
 
-List routers:
+# Quick Start Guide
 
-`curl http://localhost:8080/comms-router-web/api/routers`
+
+
+
+
+
 
 ## Quick tutorial
 
@@ -287,8 +328,3 @@ The router then releases the agent and it is available for other tasks. As in th
 We should finish our journey by making this task completed:
 
 `curl -X POST http://localhost:8080/comms-router-web/api/routers/my-router/tasks/task-en -H 'Content-Type:application/json' -d '{"state":"completed"}'`
-
-## Additional resources
-
-  * Browse [docs](docs) directory for additional documentation.
-  * See our [demo application](demo-application/README.md) as an example how to integrate the router with Nexmo API]
