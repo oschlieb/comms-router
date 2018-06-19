@@ -1,9 +1,7 @@
-
-# Using CommsRouter Expressions
+# Comms Router Expressions
 
 ## Introduction
-
-CommsRouter uses a custom expression syntax for binding Agents to Queues and filtering Tasks into different Queues in a Plan configuration. Expressions are composed of constants, functions, as well as logical and comparison operators.
+Comms Router uses a custom expression syntax for binding Agents to Queues and filtering Tasks into different queues in a plan configuration. Expressions are composed of constants, functions, as well as logical and comparison operators.
 
 For example, a Queue expression looks like:
 
@@ -17,8 +15,7 @@ And a Plan filter expression looks like:
 "#{customer_value} == 'Gold' && #{type} == 'ticket'"
 ```
 
-## Expression Structure
-
+## Expression Structure	
 Expressions are made up of simple comparisons of constants and/or JSON keys, grouped together by parenthesis functions, and logical operators.
 
 Examples:
@@ -37,9 +34,7 @@ CONTAINS(#{lvalue}, 'market')
 ```
 
 ### Constants
-
 There are 3 types of constants supported:
-
 * Strings, represented as single quoted blocks of text. 'string'.
 * Numbers, represented as integers or floating point numbers.  1, 1.0, 1.00, 3.141529
 * Booleans, represented as unquoted true or false.
@@ -47,7 +42,6 @@ There are 3 types of constants supported:
 Constants can be the left or right values of a comparison operator.
 
 ### Attributes
-
 Attributes must be enclosed by a pound sign and open brace __#{__ and a closed brace __}__.
 
 An expression with attribute could be:
@@ -73,14 +67,12 @@ Given the Task attributes:
 ```
 
 The following are valid keys in a Plan configuration, and would resolve as follows:
-
 * __string_attribute__ - a string that resolves to __"foo"__
 * __string_array__ - an array that resolves to __["a","b","c"]__
 * __int_array__ - an array that resolves to __[1,2,3,4,5]__
 * __int_array__ - an integer that resolves to __123__
 
 ### Comparison Operators
-
 Comparison operators compare two constants and return true or false. Comparisons between different types should be avoided. Scalar operators can compare two scaler values (i.e. not arrays). Array operators are not supported. To use array comparisons you can use one of the two predefined functions HAS and IN.
 
 Valid scalar operators are:
@@ -92,9 +84,7 @@ Valid scalar operators are:
 * __<=__ less than or equal to
 * __<__  less than
 
-
 ### Comparison Functions
-
 Valid functions are:
 
 * __HAS(#{array}, 'value')__ - does array in the first argument contain the value in the second argument
@@ -102,7 +92,6 @@ Valid functions are:
 * __CONTAINS(#{value1}, #{value2})__ - does the scalar value on the left contain the scalar value on the right.
 
 ### Logical Operators
-
 Compares the results of sub-expressions to the left and right and return true or false based on the operand. Parenthesis can be used to group sub-expressions.
 
 Valid logical Operators are:
