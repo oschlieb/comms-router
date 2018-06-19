@@ -88,7 +88,7 @@ GRANT ALL ON `comms_router_core`.* TO 'comms_router'@'localhost';
 
     **Note** Remember to update the following parameters above for your environment `{USERNAME}`, `{PASSWORD}`, `{HOST}`, `{PORT}` and `{DATABASE_NAME}`.
 
-3. Add the Java Database Controller (JDBC) driver to the Java Virtual Machine (JVM). For Tomcat this means copying the [MySQL driver][6] `.jar` file to `[CATALINA_BASE]/lib`.
+3. Add the Java Database Controller (JDBC) driver to the Java Virtual Machine (JVM). For Tomcat this means copying the [MySQL driver][6] `.jar` file to `CATALINA_BASE/lib`.
     
     ```
     mv ~/Downloads/mysql-connector-java-5.1.XX/mysql-connector-java-5.1.XX-bin.jar CATALINA_BASE/lib
@@ -96,13 +96,16 @@ GRANT ALL ON `comms_router_core`.* TO 'comms_router'@'localhost';
 
 4. Comms Router uses Hibernate Java Persistence API (JPA). By default Hibernate creates tables in MySQL with the MyISAM engine which is non-transactional storage engine. Comms Router **requires a transactional storage engine** so a dialect is required to enable transactional storage at in the JVM running time.
     
-    **UNIX** find or create `$CATALINA_BASE/bin/setenv.sh` then add dialect:
+    **UNIX**
+    Find or create `$CATALINA_BASE/bin/setenv.sh` then add dialect:
     ```bash
     export CATALINA_OPTS="$CATALINA_OPTS -Dhibernate.dialect=org.hibernate.dialect.MySQL57Dialect"
     ```
-    Note that MySQL**5**Dialect is still using the MyISAM engine, so use _MySQL55Dialect_ or _MySQL57Dialect_
+    Note that MySQL**5**Dialect is still using the MyISAM engine, so use MySQL**55**Dialect or MySQL**57**Dialect
 
-    **Windows** find or create `%CATALINA_BASE%\bin\setenv.bat` then add dialect:
+
+    **Windows**
+    Find or create `%CATALINA_BASE%\bin\setenv.bat` then add dialect:
     ```bat
     set CATALINA_OPTS=%CATALINA_OPTS% -Dhibernate.dialect.storage_engine=innodb
     ```
