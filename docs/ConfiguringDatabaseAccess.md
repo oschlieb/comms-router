@@ -13,44 +13,45 @@ The Comms Router API may work with different types of Java, SQL Server or Web Co
 
 ## Create the Database
 Create the database with `CHARACTER SET utf8 COLLATE utf8_general_ci`.
-    ```sql
-    CREATE DATABASE `comms_router_core` CHARACTER SET `utf8` COLLATE `utf8_general_ci`;
-    ```
+
+```sql
+CREATE DATABASE `comms_router_core` CHARACTER SET `utf8` COLLATE `utf8_general_ci`;
+```
 
 ## Create Users
 There are two options for setting up your Comms Router application database.
-* Create two users:
-    - Database Admin with full permissions (create, edit, delete)
-    - Application Admin to manage Tasks, Agents, Queues and Plans
-* Create a Super Admin user
+* Create two users Database Admin with full permissions (create, edit, delete) and Application Admin to manage Tasks, Agents, Queues and Plans.
+* Create a Super Admin user to manage both database and content.
 
-### Create Database Admin and Aplication Admin
-*Database Admin*
-    ```mysql
-    CREATE USER 'comms_router_admin'@'localhost' IDENTIFIED BY 'comms_router_admin_password';
-    GRANT ALL ON `comms_router_core`.* TO 'comms_router_admin'@'localhost';
-    ```
+### Creating Database and Application Admins
+**Database Admin**
+```mysql
+CREATE USER 'comms_router_admin'@'localhost' IDENTIFIED BY 'comms_router_admin_password';
+GRANT ALL ON `comms_router_core`.* TO 'comms_router_admin'@'localhost';
+```
     
-*Application Admin*
-    ```mysql
-    CREATE USER 'comms_router'@'localhost' IDENTIFIED BY 'comms_router_password';
-    GRANT LOCK TABLES, SELECT, INSERT, DELETE, UPDATE ON `comms_router_core`.* TO 'comms_router'@'localhost';
-    ```
+**Application Admin**
+```mysql
+CREATE USER 'comms_router'@'localhost' IDENTIFIED BY 'comms_router_password';
+GRANT LOCK TABLES, SELECT, INSERT, DELETE, UPDATE ON `comms_router_core`.* TO 'comms_router'@'localhost';
+```
 
-### Create Super Admin
-    ```mysql
-    CREATE USER 'comms_router'@'localhost' IDENTIFIED BY 'comms_router_password';
-    GRANT ALL ON `comms_router_core`.* TO 'comms_router'@'localhost';
-    ```
+### Creating Super Admin
+```mysql
+CREATE USER 'comms_router'@'localhost' IDENTIFIED BY 'comms_router_password';
+GRANT ALL ON `comms_router_core`.* TO 'comms_router'@'localhost';
+```
 
 # Configure Tomcat
 
 1. First create `context.xml` configuration for Tomcat deployment either by updating:
    
-    * `comms-router-web.xml` in `CATALINA_BASE/conf/ENGINE_NAME/HOST_NAME/` or use another file. [Read Documentation][1] or
+    * `comms-router-web.xml` in `CATALINA_BASE/conf/ENGINE_NAME/HOST_NAME/` or use another file.
     * Add a resource defined in `CATALINA_BASE/conf/context.xml` or in `CATALINA_BASE/conf/ENGINE_NAME/context.xml`
 
-2. In the chosen file add the datasource resource definition with the recommended configuration. [Read documentation][2]
+    For more help read the [Documention][1]
+
+2. In the chosen file add the datasource resource definition with the recommended configuration.
 
     ```xml
     <Resource
@@ -83,7 +84,9 @@ There are two options for setting up your Comms Router application database.
     />
     ```
 
- **Note** Remember to update the following parameters above for your environment `{USERNAME}`, `{PASSWORD}`, `{HOST}`, `{PORT}` and `{DATABASE_NAME}`.
+    For more help read the [Documention][2]
+
+    **Note** Remember to update the following parameters above for your environment `{USERNAME}`, `{PASSWORD}`, `{HOST}`, `{PORT}` and `{DATABASE_NAME}`.
 
 3. Add the Java Database Controller (JDBC) driver to the Java Virtual Machine (JVM). For Tomcat this means copying the [MySQL driver][6] `.jar` file to `[CATALINA_BASE]/lib`.
     
@@ -91,15 +94,15 @@ There are two options for setting up your Comms Router application database.
     mv ~/Downloads/mysql-connector-java-5.1.XX/mysql-connector-java-5.1.XX-bin.jar CATALINA_BASE/lib
     ```
 
-4. Comms Router uses Hibernate Java Persistence API (JPA). By default Hibernate creates tables in MySQL with the MyISAM engine which is non-transactional storage engine. Comms Router **requires** a _transactional_ storage engine so a dialect is required to enable transactional storage at in the JVM running time.
+4. Comms Router uses Hibernate Java Persistence API (JPA). By default Hibernate creates tables in MySQL with the MyISAM engine which is non-transactional storage engine. Comms Router **requires a transactional storage engine** so a dialect is required to enable transactional storage at in the JVM running time.
     
-    * **UNIX** find or create `$CATALINA_BASE/bin/setenv.sh` then add dialect:
+    **UNIX** find or create `$CATALINA_BASE/bin/setenv.sh` then add dialect:
     ```bash
     export CATALINA_OPTS="$CATALINA_OPTS -Dhibernate.dialect=org.hibernate.dialect.MySQL57Dialect"
     ```
-    Note that MySQL**5**Dialect is still using the MyISAM engine, so use MySQL**55**Dialect or MySQL**57**Dialect
+    Note that MySQL**5**Dialect is still using the MyISAM engine, so use _MySQL55Dialect_ or _MySQL57Dialect_
 
-    * **Windows** find or create `%CATALINA_BASE%\bin\setenv.bat` then add dialect:
+    **Windows** find or create `%CATALINA_BASE%\bin\setenv.bat` then add dialect:
     ```bat
     set CATALINA_OPTS=%CATALINA_OPTS% -Dhibernate.dialect.storage_engine=innodb
     ```
