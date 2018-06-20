@@ -12,13 +12,13 @@ As part of the Contact Center building blocks architecture this documentation al
 * Nexmo Comms Router API installed
 
 ## Key Concepts
-* *Router* - The parent container that joins all of the router entities tasks, agents, queues and plans.
-* *Plans* - Container that manages multiple queues, priority of tasks in queues and failover if a queue has no available agents.
-* *Queues* - A bucket to collect tasks waiting for the next available agent. The task is routed to a queue based on conditional logic (predicate) predefined by the customer requirements for example if they require to be routed to speak to an agent with a specific skill like language.
-* *Agents* - An endpoint for a phyiscal agent able to handle tasks, characterized by its capabilities or assigned skills it has based on key value pairs set.
-* *Capabilities* - Conditional logic assigned to agents and queues to route tasks. These are made of key value pairs or arrays, single or multiple value conditions.
-* *Tasks* - A work item characterized by its capabilities for example a set of skills an Agent requires to have a task routed to them based on key value pairs set.
-* *Customer* - End user that is initating the contact request and creating the task that is then routed to an agent through a queue.
+* *Router* - The parent container that joins all of the Router entities Tasks, Agents, Queues and Plans.
+* *Plans* - Container that manages multiple queues, priority of Tasks in Queues and failover if agents are not available.
+* *Queues* - A bucket to collect Tasks waiting for the next available Agent. The Task is routed to a Queue based on conditional logic (predicate) predefined by the Customer requirements for example if they require to be routed to speak to an agent with a specific skill like language.
+* *Agents* - An endpoint for a phyiscal Agent able to handle Tasks, characterized by their Capabilities or assigned skills it has based on key value pairs set.
+* *Capabilities (Skills)* - Conditional logic assigned to Agents and Queues to route Tasks. These are made of key value pairs or arrays, single or multiple value conditions.
+* *Tasks* - A work item characterized by its Capabilities for example a set of skills an Agent requires to have a Task routed to them based on key value pairs set.
+* *Customer* - End user that is initating the contact request, creating the Task that is then routed to an Agent via a Queue.
   
 ## Features
 * Agent capabilities can be text, numeric integars or ranges, boolean key value pairs or an array of strings.
