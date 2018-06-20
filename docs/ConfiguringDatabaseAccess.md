@@ -96,21 +96,20 @@ GRANT ALL ON `comms_router_core`.* TO 'comms_router'@'localhost';
 
 4. Comms Router uses Hibernate Java Persistence API (JPA). By default Hibernate creates tables in MySQL with the MyISAM engine which is non-transactional storage engine. Comms Router **requires a transactional storage engine** so a dialect is required to enable transactional storage at in the JVM running time.
     
-    **UNIX**
+    ##### UNIX
     Find or create `$CATALINA_BASE/bin/setenv.sh` then add dialect:
     ```bash
     export CATALINA_OPTS="$CATALINA_OPTS -Dhibernate.dialect=org.hibernate.dialect.MySQL57Dialect"
     ```
     Note that MySQL**5**Dialect is still using the MyISAM engine, so use MySQL**55**Dialect or MySQL**57**Dialect
 
-
-    **Windows**
+    ##### Windows
     Find or create `%CATALINA_BASE%\bin\setenv.bat` then add dialect:
     ```bat
     set CATALINA_OPTS=%CATALINA_OPTS% -Dhibernate.dialect.storage_engine=innodb
     ```
 
-5. Create a new `comms-router/db-migrations/src/main/resources/liquibase.properties` file from the `liquibase.properties.template` and make the following changes:
+5. Create a new `comms-router/db-migrations/src/main/resources/liquibase.properties` file from the `comms-router/db-migrations/src/main/resources/liquibase.properties.template` and make the following changes:
     
     ```properties
     verbose = true
