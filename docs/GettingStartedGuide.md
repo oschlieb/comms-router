@@ -34,7 +34,7 @@ curl -X PUT http://localhost:8080/comms-router-web/api/routers/MY_ROUTER
 ```
 
 ## 3. Create Queues
-```
+```curl
 curl -X PUT http://localhost:8080/comms-router-web/api/routers/MY_ROUTER/queues/MY_QUEUE \
   -H 'Content-Type:application/json' \
   -d$'{"predicate":"HAS(#{language},\'en\')"}}'  
@@ -45,7 +45,7 @@ curl -X PUT http://localhost:8080/comms-router-web/api/routers/MY_ROUTER/queues/
 The following Plan called `MY_PLAN` has a description and rules which include tasks must have `language == en` and will be routed to `MY_QUEUE` with a priority and timeout set. If no Agents are available in this Queue or if tineout limit reached with no other Queues the Task will move to the `DEFAULT_QUEUE`.
 
 In the example below make sure you have a Queue created otherwise it is possible to create a Plan without queue specifications. Let's create a Plan with a rule that will route Tasks requiring Spanish speaking Agent in our Spanish queue. Tasks that don't match this rule we will route to the English Queue.
-```
+```curl
 curl -X PUT http://localhost:8080/comms-router-web/api/routers/MY_ROUTER/plans/MY_PLAN \
   -H 'Content-Type:application/json' \
   -d$'{"description":"Description of MY_PLAN", "rules":[{"tag":"english", "predicate":"#{language} == \'en\'", "routes":[{"queueRef":"MY_QUEUE", "priority":3, "timeout":300}]}], "defaultRoute":{"queueRef":"MY_QUEUE", "priority":0, "timeout":0}}}'
@@ -53,7 +53,7 @@ curl -X PUT http://localhost:8080/comms-router-web/api/routers/MY_ROUTER/plans/M
 
 ## 5. Create Agents
 Agent can be created using a defined `ref` or allow this to be automatically created by the service. The example below creates a new user called `ALEX` who has a SIP URI and English `en` language capability. When creating an Agent the `ref` ID must be unique.
-```
+```curl
 curl -X PUT http://localhost:8080/comms-router-web/api/MY_ROUTER/demo/agents/ALEX \
   -H 'Content-Type:application/json' \
   -d '{"address":"sip:alex@vonage.com","capabilities":{"language":["en"]}}'
@@ -62,12 +62,12 @@ If not specified an Agent's status will be set to `offline` by default. Other st
 
 ### List Agents
 #### Request
-```
+```curl
 curl -X GET http://localhost:8080/comms-router-web/api/routers/MY_ROUTER/agents
 ```
 
 #### Response
-```
+```curl
 [
   {
     "ref": "alex",
@@ -89,15 +89,14 @@ curl -X GET http://localhost:8080/comms-router-web/api/routers/MY_ROUTER/agents
 
 ## 6. Create Tasks
 Below is a request to create a task `MY_TASK` that requires an Agent to be able to speak English. We assign to it the plan `MY_PLAN` using `planRef` parameter. The `callbackUrl` parameter specifies the user application entry point to be called by the router for activity related with this Task.
-```
+```curl
 curl -X PUT http://localhost:8080/comms-router-web/api/routers/MY_ROUTER/tasks/MY_TASK \
   -H 'Content-Type:application/json' \
   -d$'{"requirements":{"language":"en"},"planRef":"MY_PLAN","callbackUrl":"http://webhook.site/#/fae3ff2f-a1f7-4648-9804-21666b3bb15d"}'
 ```
 
 In addition to using a Plan to route Tasks, the router accepts direct Queue assignment by the user application.
-
-```
+```curl
 curl -X PUT http://localhost:8080/comms-router-web/api/routers/MY_ROUTER/tasks/MY_TASK \
   -H 'Content-Type:application/json' \
   -d$'{"queueRef":"MY_QUEUE","callbackUrl":"http://webhook.site/#/fae3ff2f-a1f7-4648-9804-21666b3bb15d"}'
@@ -105,12 +104,12 @@ curl -X PUT http://localhost:8080/comms-router-web/api/routers/MY_ROUTER/tasks/M
 
 ### List Tasks
 #### Request
-```
+```curl
 curl -X GET http://localhost:8080/comms-router-web/api/routers/MY_ROUTER/tasks
 ```
 
 #### Response
-```
+```json
 [
   {
     "ref": "MY_TASK",
@@ -132,7 +131,7 @@ curl -X GET http://localhost:8080/comms-router-web/api/routers/MY_ROUTER/tasks
 ```
 
 By default all Tasks are in state `waiting` if all Agents are in state `offline`. To change an Agents status use the following command:
-```
+```curl
 curl -X POST http://localhost:8080/comms-router-web/api/routers/MY_ROUTER/agents/ALEX \
   -H 'Content-Type:application/json' \
   -d '{"state":"ready"}'
@@ -143,7 +142,7 @@ Task statuses are managed by the Comms Router and include: `waiting`, `canceled`
 Once the router assigns a Task an Agent the Agent status changes to `busy`. A call to the provided `callbackUrl` can be observed in `http://webhook.site/#/fae3ff2f-a1f7-4648-9804-21666b3bb15d`. 
 
 When the user application is done with processing a Task it must declare it as done:
-```
+```curl
 curl -X POST http://localhost:8080/comms-router-web/api/routers/MY_ROUTER/tasks/MY_TASK 
   -H 'Content-Type:application/json' 
   -d '{"state":"completed"}'
@@ -151,11 +150,11 @@ curl -X POST http://localhost:8080/comms-router-web/api/routers/MY_ROUTER/tasks/
 
 The router then releases the Agent and they are available (`ready`) for other Tasks. In this example the agent `ALEX` can serve more than one Queue for example `EN_QUEUE` and `FR_QUEUE`, it will automatically get the other Task we created.
 
-```
+```curl
 curl http://localhost:8080/comms-router-web/api/routers/MY_ROUTER/tasks
 ```
 
-```
+```json
 [
   {
     "ref": "EN_TASK",
@@ -185,8 +184,7 @@ curl http://localhost:8080/comms-router-web/api/routers/MY_ROUTER/tasks
 ```
 
 To clean up the flow we should finish by making the Task complete.
-
-```
+```curl
 curl -X POST http://localhost:8080/comms-router-web/api/routers/MY_ROUTER/tasks/EN_TASK \
   -H 'Content-Type:application/json'
   -d '{"state":"completed"}'

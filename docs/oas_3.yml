@@ -1,0 +1,1794 @@
+openapi: 3.0.0
+servers:
+  - url: /comms-router-web/api
+info:
+  description: >-
+    RESTful interface to the Comms Router Core Library exposes the router
+    functionality as a microservice via a REST API.
+
+    The Comms Router Core implements the Nexmo Task Router’s business logic.It
+    provides Java interfaces allowing it to be used as a part of a Java
+    project.It uses interfaces provided by the DB Layer for persistence and
+    queueing.
+
+    The Router Core is packaged as a standalone module.
+  version: '0.9'
+  title: Comms Router Web API
+  license:
+    name: Open Source Initiative
+    url: 'https://opensource.org/licenses'
+tags:
+  - name: routers
+  - name: plans
+  - name: queues
+  - name: tasks
+  - name: agents
+paths:
+  '/routers/{id}':
+    get:
+      tags:
+        - routers
+      summary: Find router by ID
+      description: Searches all routers by the given ID
+      operationId: get
+      parameters:
+        - name: id
+          in: path
+          description: ID of the router to be searched
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+        '404':
+          description: Router with the provided id is not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+    post:
+      tags:
+        - routers
+      summary: Update an existing router properties
+      description: ''
+      operationId: update
+      parameters:
+        - name: id
+          in: path
+          description: The id of the router to be updated
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Successful operation
+        '400':
+          description: Invalid ID supplied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+        '404':
+          description: Router not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+        '405':
+          description: Validation exception
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRouterArg'
+        description: UpdateRouterArg object specifying parameters to be updated
+        required: true
+  '/routers/{ref}':
+    put:
+      tags:
+        - routers
+      summary: Replace an existing router
+      description: 'If the router with the specified id does not exist, it creates it'
+      operationId: put
+      parameters:
+        - name: ref
+          in: path
+          description: The id of the router to be updated
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+        '400':
+          description: Invalid ID supplied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+        '404':
+          description: Router not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+        '405':
+          description: Validation exception
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRouterArg'
+        description: CreateRouterArg object specifying all the parameters
+        required: true
+    delete:
+      tags:
+        - routers
+      summary: Deletes an existing router by ID
+      description: ''
+      operationId: delete
+      parameters:
+        - name: ref
+          in: path
+          description: The id of the router to be deleted
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+        '400':
+          description: Invalid ID supplied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+        '404':
+          description: Router not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+  /routers:
+    get:
+      tags:
+        - routers
+      summary: Get All Routers
+      description: >-
+        Returns a list of Router. A single Router object represents a container
+        for Agents, Tasks, Queues and Plans.
+      operationId: list
+      parameters:
+        - name: token
+          in: query
+          description: The token from the previous request
+          required: false
+          schema:
+            type: string
+        - name: per_page
+          in: query
+          description: Number of items per page (Maximum 50)
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 50
+            default: 10
+        - name: sort
+          in: query
+          required: false
+          schema:
+            type: string
+            pattern: '(?:\s*(?:(?[-+])(?[^,]+))\s*,?){1,3}?'
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          headers:
+            X-Next-Token:
+              description: The token for the next page
+              schema:
+                type: string
+    post:
+      tags:
+        - routers
+      summary: Create a Router
+      description: 'A Router is a container for your Tasks, Agents, Tasks, Plans and Rules.'
+      operationId: create
+      responses:
+        '201':
+          description: Created
+          headers:
+            Location:
+              description: The path to the newly created resource
+              schema:
+                type: string
+                format: url
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRouterArg'
+        description: Router object that needs to be added to the list of routers
+        required: true
+  '/routers/{routerRef}/plans/{resourceId}':
+    post:
+      tags:
+        - plans
+      summary: Update an existing Plan
+      description: Update some properties of an existing Plan
+      operationId: update
+      parameters:
+        - name: resourceId
+          in: path
+          description: ID of the plan to be updated
+          required: true
+          schema:
+            type: string
+        - name: routerRef
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Successful operation
+        '400':
+          description: Invalid ID supplied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+        '404':
+          description: Plan not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+        '405':
+          description: Validation exception
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePlanArg'
+        description: UpdatePlanArg object representing parameters of the Plan to be updated
+        required: true
+    put:
+      tags:
+        - plans
+      summary: Replace an existing Plan
+      description: 'If the plan with the specified id does not exist, it creates it'
+      operationId: create
+      parameters:
+        - name: resourceId
+          in: path
+          description: The id of the plan to be replaced
+          required: true
+          schema:
+            type: string
+        - name: routerRef
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiObjectRef'
+        '400':
+          description: Invalid ID supplied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+        '404':
+          description: Plan not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+        '405':
+          description: Validation exception
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePlanArg'
+        description: CreatePlanArg object specifying all the parameters
+  '/routers/{routerRef}/plans':
+    get:
+      tags:
+        - plans
+      summary: List all resources
+      description: Default paging will be applied
+      operationId: list_1
+      parameters:
+        - name: token
+          in: query
+          description: The token from the previous request
+          required: false
+          schema:
+            type: string
+        - name: per_page
+          in: query
+          description: Number of items per page (Maximum 50)
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 50
+            default: 10
+        - name: sort
+          in: query
+          required: false
+          schema:
+            type: string
+            pattern: '(?:\s*(?:(?[-+])(?[^,]+))\s*,?){1,3}?'
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: routerRef
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          headers:
+            X-Next-Token:
+              description: The token for the next page
+              schema:
+                type: string
+    post:
+      tags:
+        - plans
+      summary: Add new Plan
+      description: Add new Plan and associate it with a Router
+      operationId: create
+      parameters:
+        - name: routerRef
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiObjectRef'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePlanArg'
+  '/routers/{routerRef}/plans/{resourceRef}':
+    get:
+      tags:
+        - plans
+      summary: Get resource by ID
+      description: Returns resource by the given ID
+      operationId: get_1
+      parameters:
+        - name: resourceRef
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: routerRef
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RouterObjectRef'
+    delete:
+      tags:
+        - plans
+      summary: Deletes an existing resource by ID
+      description: ''
+      operationId: delete_1
+      parameters:
+        - name: resourceRef
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: routerRef
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+        '400':
+          description: Invalid ID supplied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+        '404':
+          description: Router not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+  '/routers/{routerRef}/queues/{resourceId}/size':
+    get:
+      tags:
+        - queues
+      summary: Get the size of the Queue
+      description: >-
+        Returns the number of Tasks in waiting state in the Queue identified by
+        {resourceId}
+      operationId: count
+      parameters:
+        - name: resourceId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: routerRef
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SizeDto'
+  '/routers/{routerRef}/queues/{resourceId}':
+    post:
+      tags:
+        - queues
+      summary: Update an existing Queue
+      description: >-
+        Modifies the Queue. If you modify a Queue and alter its predicate, all
+        the Agents will be evaluated and assignments will be created and / or
+        removed
+      operationId: update
+      parameters:
+        - name: resourceId
+          in: path
+          description: ID of the queue to be updated
+          required: true
+          schema:
+            type: string
+        - name: routerRef
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Successful operation
+        '400':
+          description: Invalid ID supplied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+        '404':
+          description: Queue not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+        '405':
+          description: Validation exception
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateQueueArg'
+        description: >-
+          UpdateQueueArg object representing parameters of the Queue to be
+          updated
+        required: true
+    put:
+      tags:
+        - queues
+      summary: Replace an existing Queue
+      description: 'If the queue with the specified id does not exist, it creates it'
+      operationId: create
+      parameters:
+        - name: resourceId
+          in: path
+          description: The id of the queue to be replaced
+          required: true
+          schema:
+            type: string
+        - name: routerRef
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiObjectRef'
+        '400':
+          description: Invalid ID supplied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+        '404':
+          description: Queue not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+        '405':
+          description: Validation exception
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateQueueArg'
+        description: CreateQueueArg object specifying all the parameters
+  '/routers/{routerRef}/queues':
+    get:
+      tags:
+        - queues
+      summary: List all resources
+      description: Default paging will be applied
+      operationId: list_2
+      parameters:
+        - name: token
+          in: query
+          description: The token from the previous request
+          required: false
+          schema:
+            type: string
+        - name: per_page
+          in: query
+          description: Number of items per page (Maximum 50)
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 50
+            default: 10
+        - name: sort
+          in: query
+          required: false
+          schema:
+            type: string
+            pattern: '(?:\s*(?:(?[-+])(?[^,]+))\s*,?){1,3}?'
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: routerRef
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          headers:
+            X-Next-Token:
+              description: The token for the next page
+              schema:
+                type: string
+    post:
+      tags:
+        - queues
+      summary: Creates a new Queue
+      description: Creates a new Queue and associates it with a Router
+      operationId: create
+      parameters:
+        - name: routerRef
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiObjectRef'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateQueueArg'
+  '/routers/{routerRef}/queues/{resourceId}/tasks':
+    get:
+      tags:
+        - queues
+      summary: Get the Tasks waiting in the Queue
+      description: 'List all Tasks in waiting state in the Queue identified by {resourceId}'
+      operationId: getTasks
+      parameters:
+        - name: resourceId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: routerRef
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaskDto'
+  '/routers/{routerRef}/queues/{resourceRef}':
+    get:
+      tags:
+        - queues
+      summary: Get resource by ID
+      description: Returns resource by the given ID
+      operationId: get_2
+      parameters:
+        - name: resourceRef
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: routerRef
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RouterObjectRef'
+    delete:
+      tags:
+        - queues
+      summary: Deletes an existing resource by ID
+      description: ''
+      operationId: delete_2
+      parameters:
+        - name: resourceRef
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: routerRef
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+        '400':
+          description: Invalid ID supplied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+        '404':
+          description: Router not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+  '/routers/{routerRef}/tasks/{resourceId}':
+    post:
+      tags:
+        - tasks
+      summary: Update an existing Task
+      description: Update some properties of an existing Task
+      operationId: update
+      parameters:
+        - name: resourceId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: routerRef
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Successful operation
+        '400':
+          description: Invalid ID supplied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+        '405':
+          description: Validation exception
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTaskArg'
+    put:
+      tags:
+        - tasks
+      summary: Replace an existing Task
+      description: 'If the task with the specified id does not exist, it creates it'
+      operationId: create
+      parameters:
+        - name: resourceId
+          in: path
+          description: The id of the task to be replaced
+          required: true
+          schema:
+            type: string
+        - name: routerRef
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatedTaskDto'
+        '400':
+          description: Invalid ID supplied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+        '405':
+          description: Validation exception
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTaskArg'
+        description: CreateTaskArg object specifying all the parameters
+  '/routers/{routerRef}/tasks':
+    get:
+      tags:
+        - tasks
+      summary: List all resources
+      description: Default paging will be applied
+      operationId: list_3
+      parameters:
+        - name: token
+          in: query
+          description: The token from the previous request
+          required: false
+          schema:
+            type: string
+        - name: per_page
+          in: query
+          description: Number of items per page (Maximum 50)
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 50
+            default: 10
+        - name: sort
+          in: query
+          required: false
+          schema:
+            type: string
+            pattern: '(?:\s*(?:(?[-+])(?[^,]+))\s*,?){1,3}?'
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: routerRef
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          headers:
+            X-Next-Token:
+              description: The token for the next page
+              schema:
+                type: string
+    post:
+      tags:
+        - tasks
+      summary: Add new Task
+      description: Create a new Task within a Router
+      operationId: create
+      parameters:
+        - name: routerRef
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Created successfully
+          headers:
+            Location:
+              description: The path to the newly created resource
+              schema:
+                type: string
+                format: url
+            X-Queue-Size:
+              description: The number of tasks in the queue before that one
+              schema:
+                type: integer
+                format: int64
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatedTaskDto'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTaskArg'
+  '/routers/{routerRef}/tasks/byTag':
+    get:
+      tags:
+        - tasks
+      summary: Get resource by Tag
+      description: Returns resource by the given Tag
+      operationId: getByTag
+      parameters:
+        - name: tag
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: routerRef
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        default:
+          description: successful operation
+  '/routers/{routerRef}/tasks/{resourceId}/user_context':
+    get:
+      tags:
+        - tasks
+      summary: Get the current user context
+      description: ''
+      operationId: getContext
+      parameters:
+        - name: resourceId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: routerRef
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  $ref: '#/components/schemas/AttributeValueDto'
+    post:
+      tags:
+        - tasks
+      summary: Updates/Creates keys in the user context
+      description: ''
+      operationId: updateContext
+      parameters:
+        - name: resourceId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: routerRef
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Successful operation
+      requestBody:
+        $ref: '#/components/requestBodies/UpdateTaskContext'
+    put:
+      tags:
+        - tasks
+      summary: Update the whole user context
+      description: ''
+      operationId: replaceContext
+      parameters:
+        - name: resourceId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: routerRef
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Successful operation
+      requestBody:
+        $ref: '#/components/requestBodies/UpdateTaskContext'
+  '/routers/{routerRef}/tasks/{resourceId}/user_context/{key}':
+    get:
+      tags:
+        - tasks
+      summary: Get the value with specified key from user context
+      description: ''
+      operationId: getUserContextKey
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: resourceId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: routerRef
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttributeValueDto'
+    put:
+      tags:
+        - tasks
+      summary: Create/Update a value with specified key in user context
+      description: ''
+      operationId: updateKey
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: resourceId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: routerRef
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Successful operation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttributeValueDto'
+  '/routers/{routerRef}/tasks/{resourceRef}':
+    get:
+      tags:
+        - tasks
+      summary: Get resource by ID
+      description: Returns resource by the given ID
+      operationId: get_3
+      parameters:
+        - name: resourceRef
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: routerRef
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RouterObjectRef'
+    delete:
+      tags:
+        - tasks
+      summary: Deletes an existing resource by ID
+      description: ''
+      operationId: delete_3
+      parameters:
+        - name: resourceRef
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: routerRef
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+        '400':
+          description: Invalid ID supplied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+        '404':
+          description: Router not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+  '/routers/{routerRef}/agents/{resourceId}':
+    post:
+      tags:
+        - agents
+      summary: Update an existing Agent
+      description: Update some properties of an existing Agent
+      operationId: update
+      parameters:
+        - name: resourceId
+          in: path
+          description: ID of the agent to be updated
+          required: true
+          schema:
+            type: string
+        - name: routerRef
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Successful operation
+        '400':
+          description: Invalid ID supplied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+        '404':
+          description: Agent not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+        '405':
+          description: Validation exception
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAgentArg'
+        description: >-
+          UpdateAgentArg object representing parameters of the Agent to be
+          updated
+        required: true
+    put:
+      tags:
+        - agents
+      summary: Replace an existing Agent
+      description: 'If the agent with the specified id does not exist, it creates it'
+      operationId: create
+      parameters:
+        - name: resourceId
+          in: path
+          description: The id of the agent to be replaced
+          required: true
+          schema:
+            type: string
+        - name: routerRef
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiObjectRef'
+        '400':
+          description: Invalid ID supplied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+        '404':
+          description: Agent not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+        '405':
+          description: Validation exception
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAgentArg'
+        description: CreateAgentArg object specifying all the parameters
+  '/routers/{routerRef}/agents':
+    get:
+      tags:
+        - agents
+      summary: List all resources
+      description: Default paging will be applied
+      operationId: list_4
+      parameters:
+        - name: token
+          in: query
+          description: The token from the previous request
+          required: false
+          schema:
+            type: string
+        - name: per_page
+          in: query
+          description: Number of items per page (Maximum 50)
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 50
+            default: 10
+        - name: sort
+          in: query
+          required: false
+          schema:
+            type: string
+            pattern: '(?:\s*(?:(?[-+])(?[^,]+))\s*,?){1,3}?'
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: routerRef
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          headers:
+            X-Next-Token:
+              description: The token for the next page
+              schema:
+                type: string
+    post:
+      tags:
+        - agents
+      summary: Add new Agent
+      description: Add new Agent and associate it with a Router
+      operationId: create
+      parameters:
+        - name: routerRef
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiObjectRef'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAgentArg'
+  '/routers/{routerRef}/agents/{resourceRef}':
+    get:
+      tags:
+        - agents
+      summary: Get resource by ID
+      description: Returns resource by the given ID
+      operationId: get_4
+      parameters:
+        - name: resourceRef
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: routerRef
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RouterObjectRef'
+    delete:
+      tags:
+        - agents
+      summary: Deletes an existing resource by ID
+      description: ''
+      operationId: delete_4
+      parameters:
+        - name: resourceRef
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: routerRef
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+        '400':
+          description: Invalid ID supplied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+        '404':
+          description: Router not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionPresentation'
+components:
+  requestBodies:
+    UpdateTaskContext:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UpdateTaskContext'
+  schemas:
+    RouterDto:
+      type: object
+      properties:
+        ref:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+    ConstraintPresentation:
+      type: object
+      properties:
+        violation:
+          type: string
+    ErrorPresentation:
+      type: object
+      properties:
+        code:
+          type: string
+        description:
+          type: string
+    ExceptionPresentation:
+      type: object
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorPresentation'
+        information:
+          $ref: '#/components/schemas/HelpInformation'
+        violations:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/ConstraintPresentation'
+    HelpInformation:
+      type: object
+      properties:
+        url:
+          type: string
+    CreateRouterArg:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+    UpdateRouterArg:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+    ApiObjectRef:
+      type: object
+      properties:
+        ref:
+          type: string
+    UpdatePlanArg:
+      type: object
+      properties:
+        description:
+          type: string
+    CreatePlanArg:
+      type: object
+      properties:
+        description:
+          type: string
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/RuleDto'
+        defaultRoute:
+          $ref: '#/components/schemas/RouteDto'
+    RouteDto:
+      type: object
+      properties:
+        queueRef:
+          type: string
+        priority:
+          type: integer
+          format: int64
+        timeout:
+          type: integer
+          format: int64
+    RuleDto:
+      type: object
+      properties:
+        tag:
+          type: string
+        predicate:
+          type: string
+        routes:
+          type: array
+          items:
+            $ref: '#/components/schemas/RouteDto'
+    RouterObjectRef:
+      type: object
+      properties:
+        ref:
+          type: string
+        routerRef:
+          type: string
+    SizeDto:
+      type: object
+      properties:
+        size:
+          type: integer
+          format: int64
+    UpdateQueueArg:
+      type: object
+      properties:
+        predicate:
+          type: string
+        description:
+          type: string
+    CreateQueueArg:
+      type: object
+      properties:
+        description:
+          type: string
+        predicate:
+          type: string
+    AttributeValueDto:
+      type: object
+    TaskDto:
+      type: object
+      properties:
+        ref:
+          type: string
+        routerRef:
+          type: string
+        requirements:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/AttributeValueDto'
+        userContext:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/AttributeValueDto'
+        state:
+          type: string
+          enum:
+            - waiting
+            - canceled
+            - assigned
+            - completed
+        queueRef:
+          type: string
+        agentRef:
+          type: string
+        callbackUrl:
+          type: string
+        priority:
+          type: integer
+          format: int64
+        createDate:
+          type: string
+          format: date-time
+        updateDate:
+          type: string
+          format: date-time
+        queuedTimeout:
+          type: integer
+          format: int64
+        tag:
+          type: string
+    UpdateTaskArg:
+      type: object
+      properties:
+        state:
+          type: string
+          enum:
+            - waiting
+            - canceled
+            - assigned
+            - completed
+    CreatedTaskDto:
+      type: object
+      properties:
+        ref:
+          type: string
+        queueTasks:
+          type: integer
+          format: int64
+    CreateTaskArg:
+      type: object
+      properties:
+        queueRef:
+          type: string
+        planRef:
+          type: string
+        requirements:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/AttributeValueDto'
+        userContext:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/AttributeValueDto'
+        callbackUrl:
+          type: string
+          format: url
+        tag:
+          type: string
+    EntityTag:
+      type: object
+      properties:
+        value:
+          type: string
+        weak:
+          type: boolean
+    Link:
+      type: object
+      properties:
+        type:
+          type: string
+        params:
+          type: object
+          additionalProperties:
+            type: string
+        uri:
+          type: string
+          format: uri
+        title:
+          type: string
+        uriBuilder:
+          $ref: '#/components/schemas/UriBuilder'
+        rels:
+          type: array
+          items:
+            type: string
+        rel:
+          type: string
+    Locale:
+      type: object
+      properties:
+        language:
+          type: string
+        script:
+          type: string
+        country:
+          type: string
+        variant:
+          type: string
+        extensionKeys:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+        unicodeLocaleAttributes:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+        unicodeLocaleKeys:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+        iso3Language:
+          type: string
+        iso3Country:
+          type: string
+        displayLanguage:
+          type: string
+        displayScript:
+          type: string
+        displayCountry:
+          type: string
+        displayVariant:
+          type: string
+        displayName:
+          type: string
+    MediaType:
+      type: object
+      properties:
+        type:
+          type: string
+        subtype:
+          type: string
+        parameters:
+          type: object
+          additionalProperties:
+            type: string
+        wildcardType:
+          type: boolean
+        wildcardSubtype:
+          type: boolean
+    NewCookie:
+      type: object
+      properties:
+        name:
+          type: string
+        value:
+          type: string
+        version:
+          type: integer
+          format: int32
+        path:
+          type: string
+        domain:
+          type: string
+        comment:
+          type: string
+        maxAge:
+          type: integer
+          format: int32
+        expiry:
+          type: string
+          format: date-time
+        secure:
+          type: boolean
+        httpOnly:
+          type: boolean
+    Response:
+      type: object
+      properties:
+        length:
+          type: integer
+          format: int32
+        language:
+          $ref: '#/components/schemas/Locale'
+        location:
+          type: string
+          format: uri
+        cookies:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/NewCookie'
+        status:
+          type: integer
+          format: int32
+        headers:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: object
+        lastModified:
+          type: string
+          format: date-time
+        date:
+          type: string
+          format: date-time
+        entity:
+          type: object
+        mediaType:
+          $ref: '#/components/schemas/MediaType'
+        metadata:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: object
+        statusInfo:
+          $ref: '#/components/schemas/StatusType'
+        stringHeaders:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+        links:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Link'
+        allowedMethods:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+        entityTag:
+          $ref: '#/components/schemas/EntityTag'
+    StatusType:
+      type: object
+      properties:
+        reasonPhrase:
+          type: string
+        family:
+          type: string
+          enum:
+            - INFORMATIONAL
+            - SUCCESSFUL
+            - REDIRECTION
+            - CLIENT_ERROR
+            - SERVER_ERROR
+            - OTHER
+        statusCode:
+          type: integer
+          format: int32
+    UriBuilder:
+      type: object
+    UserContextResource:
+      type: object
+      properties:
+        context:
+          $ref: '#/components/schemas/Response'
+    UpdateTaskContext:
+      type: object
+      properties:
+        userContext:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/AttributeValueDto'
+    UpdateAgentArg:
+      type: object
+      properties:
+        address:
+          type: string
+        capabilities:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/AttributeValueDto'
+        state:
+          type: string
+          enum:
+            - offline
+            - ready
+            - busy
+            - unavailable
+        name:
+          type: string
+        description:
+          type: string
+    CreateAgentArg:
+      type: object
+      properties:
+        address:
+          type: string
+        capabilities:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/AttributeValueDto'
+        name:
+          type: string
+        description:
+          type: string

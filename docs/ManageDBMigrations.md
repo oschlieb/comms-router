@@ -2,7 +2,7 @@
 
 We use [Liquibase] to manage the Database Schema over time. The integration is done with [Maven Liquibase Plugin] and you can issue commands with the `mvn liquibase:<command>` in the `db-migrations` directory.  
 
-Following the [best practices] document we have main changelog file at `src/main/resources/db/changelog.yaml`. This file has `include` statement(s) in the correct order to the `migrations` directory where are the changelog files by major release. The _master_ file at `src/main/resources/db/migrations/changelog-master.yaml` has all the change sets for the initial schema creation. 
+Following the [best practices] document we have main changelog file at `db-migrations/src/main/resources/db/changelog.yaml`. This file has `include` statement(s) in the correct order to the `migrations` directory where are the changelog files by major release. The _master_ file at `src/main/resources/db/migrations/changelog-master.yaml` has all the change sets for the initial schema creation. 
 
 ## Standard migratiom 
 
@@ -34,7 +34,7 @@ Following the [best practices] document we have main changelog file at `src/main
 ## Create diff with changes
 Generate changeSet(s) with the difference between two given databases. In this example we will create an additional database names `comms_router_dev`.
 
-**Note** Prerequisite for this task is to have an identical database with the new changes.
+**Note:** Prerequisite for this task is to have an identical database with the new changes.
 
 1. Create new database.
 
@@ -64,7 +64,7 @@ Generate changeSet(s) with the difference between two given databases. In this e
 	diffChangeLogFile=src/main/resources/db/migrations/changelog-next.yaml
     ```
 
-5. Edit the `url` property in `comms-router/db-migrations/src/main/resources/liquibase.properties` by updating the standard connection settings to point to the _dev_ database instance.
+5. Edit the `url` property in `db-migrations/src/main/resources/liquibase.properties` by updating the standard connection settings to point to the _dev_ database instance.
 
     ```properties
 	url=jdbc:mysql://localhost:3306/comms_router_dev

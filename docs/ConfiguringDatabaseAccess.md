@@ -24,13 +24,13 @@ There are two options for setting up your Comms Router application database.
 * Create a Super Admin user to manage both database and content.
 
 ### Creating Database and Application Admins
-**Database Admin**
+#### Database Admin
 ```mysql
 CREATE USER 'comms_router_admin'@'localhost' IDENTIFIED BY 'comms_router_admin_password';
 GRANT ALL ON `comms_router_core`.* TO 'comms_router_admin'@'localhost';
 ```
     
-**Application Admin**
+#### Application Admin
 ```mysql
 CREATE USER 'comms_router'@'localhost' IDENTIFIED BY 'comms_router_password';
 GRANT LOCK TABLES, SELECT, INSERT, DELETE, UPDATE ON `comms_router_core`.* TO 'comms_router'@'localhost';
@@ -49,7 +49,7 @@ GRANT ALL ON `comms_router_core`.* TO 'comms_router'@'localhost';
     * `comms-router-web.xml` in `CATALINA_BASE/conf/ENGINE_NAME/HOST_NAME/` or use another file.
     * Add a resource defined in `CATALINA_BASE/conf/context.xml` or in `CATALINA_BASE/conf/ENGINE_NAME/context.xml`
 
-    For more help read the [Documention][1]
+    For more help read the [documention][1].
 
 2. In the chosen file add the datasource resource definition with the recommended configuration.
 
@@ -65,7 +65,7 @@ GRANT ALL ON `comms_router_core`.* TO 'comms_router'@'localhost';
       />
     ```
  
-    * Optionally it is possible to enable Database Connection Pool by setting additional options. See documentation [here][4] and [here][5].
+    Optionally it is possible to enable Database Connection Pool by setting additional options. See documentation [here][4] and [here][5].
 
     ```xml
     <Resource
@@ -84,13 +84,14 @@ GRANT ALL ON `comms_router_core`.* TO 'comms_router'@'localhost';
     />
     ```
 
-    For more help read the [Documention][2]
+    For more help read the [documention][2].
 
-    **Note** Remember to update the following parameters above for your environment `{USERNAME}`, `{PASSWORD}`, `{HOST}`, `{PORT}` and `{DATABASE_NAME}`.
+    **Note:** Remember to update the following parameters above for your environment `{USERNAME}`, `{PASSWORD}`, `{HOST}`, `{PORT}` and `{DATABASE_NAME}`.
 
 3. Add the Java Database Controller (JDBC) driver to the Java Virtual Machine (JVM). For Tomcat this means copying the [MySQL driver][6] `.jar` file to `CATALINA_BASE/lib`.
     
-    ```
+    ##### UNIX
+    ```bash
     mv ~/Downloads/mysql-connector-java-5.1.XX/mysql-connector-java-5.1.XX-bin.jar CATALINA_BASE/lib
     ```
 
@@ -109,7 +110,7 @@ GRANT ALL ON `comms_router_core`.* TO 'comms_router'@'localhost';
     set CATALINA_OPTS=%CATALINA_OPTS% -Dhibernate.dialect.storage_engine=innodb
     ```
 
-5. Create a new `comms-router/db-migrations/src/main/resources/liquibase.properties` file from the `comms-router/db-migrations/src/main/resources/liquibase.properties.template` and make the following changes:
+5. Create a new `db-migrations/src/main/resources/liquibase.properties` file from the `db-migrations/src/main/resources/liquibase.properties.template` and make the following changes:
     
     ```properties
     verbose = true

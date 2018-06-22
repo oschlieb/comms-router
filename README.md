@@ -73,20 +73,28 @@ Before installation, you’ll need the following from the [Nexmo Dashboard](http
 
 The Comms Router API may work with different types of Java, SQL Server or Web Container and is currently being tested and maintained with the above component versions.
 
-## Build
-* Install Java and Maven, clone the repo and execute: `mvn install`
-* The resulting war file should be: `web/target/comms-router-web.war`
+## Install and build
+1. Install Java - Oracle JDK/JRE 8 (build/runtime)
+2. Install SQL Server - MySQL 5.7 (runtime)
+3. [Create database and configure Tomcat](docs/ConfiguringDatabaseAccess.md) for the router:
+	- Create and `context.xml` configure `context.xml` datasource resource definition
+	- Install the Java Database Controller (JDBC) driver
+	- Update or create `setenv` file
+	- Create new `liquibase.properties` file
+	- Populate and migrate the database
+4. Clone Comms Router repository
+5. Install Maven:
+	- Navigate to local repository `cd comms-router/`
+	- Run Maven install `mvn install`
+8. Build application:
+	- Navigate to `web/target/`
+	- Deploy application to Tomcat `mv comms-router-web.war /usr/local/apache-tomcat-8.0.XX/webapps/`
 
-## Install
-* Create [database for the router](docs/ConfiguringDatabaseAccess.md).
-* Create database user to be used by the router and grant this user access to the newly created database.
-* Configure JNDI data source with name `jdbc/commsRouterDB`.
+**Note:** Depending Tomcat settings this can be done by simple copying it to the Tomcat's webapps directory.
 
-Read more information on [how to do set up Tomcat](docs/ConfiguringDatabaseAccess.md) for Comms Router.
-
-* Deploy `comms-router-web.war` into Tomcat.
-* Depending on your Tomcat settings this can be done by simple copying it to the Tomcat's webapps directory.
-* List routers: `curl -X GET http://localhost:8080/comms-router-web/api/routers`
+## Test installation
+1. Start Tomcat
+2. List routers `curl -X GET http://localhost:8080/comms-router-web/api/routers`
 
 ## Supporting documentation
 * [Getting Started Guide](docs/GettingStartedGuide.md) for quick start.
