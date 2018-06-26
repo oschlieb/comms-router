@@ -35,24 +35,18 @@ As part of the Contact Center building blocks architecture this documentation al
 5. Agent accepts reservation and dials customer phone number (PSTN)
 6. Call is initiated and connects the Agent to the customer
 
-![Nexmo Comms Router callback using Voice over PSTN customer journey](to_do.png)
-
 ## Inbound Voice Call (PSTN):
 1. Customer calls Nexmo phone number
-2. Client receives request via Webhook
-3. Predefined IVR option selected by the customer
-4. Client receives IVR option from Voice API
-5. Comms Router Task created from client
-6. Available Agent found with matching criteria
-7. Agent accepts request
-8. Customer connected to Agent
+2. Client receives request via Webhook and NCCO request with predefined IVR options
+3. Client receives IVR option from Voice API
+4. Comms Router Task created from client
+5. Available Agent found with matching criteria
+6. Agent accepts request and Customer connected to Agent
 
-![Nexmo Comms Router inbound call customer journey](to_do.png)
+![Nexmo Comms Router inbound call customer journey](comms_router_inbound_use_case_flow.png)
 
 ## Agent Management and Real-Time Tasks Dashboard:
 Manage Agents availability, phone numbers, Skills, Queues and Plans within a Dashboard application. View tasks associated with Queues in real-time and manage Skills of Agents and their availbility.
-
-![Agent Management Dashboard](to_do.png)
 
 # Installation
 Before installation, you’ll need the following from the [Nexmo Dashboard](https://dashboard.nexmo.com/sign-in). If you need to create an account [sign up for a Nexmo](https://dashboard.nexmo.com/sign-up).
