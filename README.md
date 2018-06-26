@@ -27,15 +27,9 @@ As part of the Contact Center building blocks architecture this documentation al
 
 # Customer Journey Flows
 
-## Callback Voice Call (PSTN):
-1. Customer submits an online callback request form
-2. Form submitted to server application
-3. Task is created with routing requirements from customer request
-4. Available Agent is found with matching skills
-5. Agent accepts reservation and dials customer phone number (PSTN)
-6. Call is initiated and connects the Agent to the customer
-
 ## Inbound Voice Call (PSTN):
+Can be set up using the current [demo application](tree/master/demo-application) for an inbound Contact Center use case.
+
 1. Customer calls Nexmo phone number
 2. Client receives request via Webhook and NCCO request with predefined IVR options
 3. Client receives IVR option from Voice API
@@ -45,8 +39,18 @@ As part of the Contact Center building blocks architecture this documentation al
 
 ![Nexmo Comms Router inbound call customer journey](comms_router_inbound_use_case_flow.png)
 
+## Callback Voice Call (PSTN):
+Require creating a custom application to handle the inbound request and a client for connecting an Agent to a Customer through a PSTN call. [View documentation](https://developer.nexmo.com/voice/voice-api/building-blocks/make-an-outbound-call) for creating an outbound Voice application.
+
+1. Customer submits an online callback request form
+2. Form submitted to server application
+3. Task is created with routing requirements from customer request
+4. Available Agent is found with matching skills
+5. Agent accepts reservation and dials customer phone number (PSTN)
+6. Call is initiated and connects the Agent to the customer
+
 ## Agent Management and Real-Time Tasks Dashboard:
-Manage Agents availability, phone numbers, Skills, Queues and Plans within a Dashboard application. View tasks associated with Queues in real-time and manage Skills of Agents and their availbility.
+Manage Agents availability, phone numbers, Skills, Queues and Plans within a Dashboard web UI application. View tasks associated with Queues in real-time and manage Skills of Agents and their availbility.
 
 # Installation
 Before installation, you’ll need the following from the [Nexmo Dashboard](https://dashboard.nexmo.com/sign-in). If you need to create an account [sign up for a Nexmo](https://dashboard.nexmo.com/sign-up).
@@ -70,7 +74,7 @@ The Comms Router API may work with different types of Java, SQL Server or Web Co
 ## Install and build
 1. Install Java - Oracle JDK/JRE 8 (build/runtime)
 2. Install SQL Server - MySQL 5.7 (runtime)
-3. [Create database and configure Tomcat](docs/ConfiguringDatabaseAccess.md) for the router:
+3. [View guide to creating database and configuring Tomcat](docs/ConfiguringDatabaseAccess.md):
 	- Create and `context.xml` configure `context.xml` datasource resource definition
 	- Install the Java Database Controller (JDBC) driver
 	- Update or create `setenv` file
