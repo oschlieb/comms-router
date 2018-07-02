@@ -3,10 +3,10 @@ This guide provides an overview of the main resources for the Comms Router API, 
 
 **Note:** the commands listed below are designed to be used with a Unix shell. Some of them need to be modified in order to work on Windows.
 
-##Process to get up and running
+## Process to get up and running
 1. Setting up Voice
-2. Creating a router
-4. Creating Aueues
+2. Creating Routers
+4. Creating Queues
 4. Creating Plans
 5. Creating Agents
 6. Creating Tasks
@@ -27,7 +27,7 @@ An overview and Getting started guide for Voice can be found here https://develo
 * Create your NCCO using the IVR use case with the required Task and Agent capabilities (link to demo app) link it to your application (answer_url)
 * Create client application to manage Comms Router and Voice or install and use the [Comms Router demo application](../demo-application)
 
-## 2. Create a Router
+## 2. Create Routers
 When creating a router you can either specify the router `ref` ID for example `MY_ROUTER` or leave blank and it will be automatically generated. All other resources are identified by the their `ref` ID. When creating a router the `ref` ID must be unique.
 ```
 curl -X PUT http://localhost:8080/comms-router-web/api/routers/MY_ROUTER
@@ -39,7 +39,7 @@ curl -X PUT http://localhost:8080/comms-router-web/api/routers/MY_ROUTER/queues/
   -H 'Content-Type:application/json' \
   -d$'{"predicate":"HAS(#{language},\'en\')"}}'  
 ```
-**Note:** `-d$ ... }` is used to escape the JSON within the `predicate` key value pair for the cURL command.
+**Note:** When creating a Queue we recommend using `PUT` method as it is possible to add the Queue name in `path` as otherwise the `routerRef` parameter is required in the header to name the Queue.
 
 ## 4. Create Plans
 The following Plan called `MY_PLAN` has a description and rules which include tasks must have `language == en` and will be routed to `MY_QUEUE` with a priority and timeout set. If no Agents are available in this Queue or if tineout limit reached with no other Queues the Task will move to the `DEFAULT_QUEUE`.

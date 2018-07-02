@@ -74,7 +74,7 @@ The Comms Router API may work with different types of Java, SQL Server or Web Co
 ## Install and build
 1. Install Java - Oracle JDK/JRE 8 (build/runtime)
 2. Install SQL Server - MySQL 5.7 (runtime)
-3. Installing SQL Server and configuring Tomcat: ([view complete guide](docs/ConfiguringDatabaseAccess.md))
+3. [View guide to creating database and configuring Tomcat](docs/ConfiguringDatabaseAccess.md):
 	- Create and `context.xml` configure `context.xml` datasource resource definition
 	- Install the Java Database Controller (JDBC) driver
 	- Update or create `setenv` file
