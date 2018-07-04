@@ -25,7 +25,7 @@ An overview and Getting started guide for Voice can be found here https://develo
 
 * [Create an application](https://developer.nexmo.com/concepts/guides/applications#apps_quickstart) and associate it with your virtual number. Nexmo retrieves the initial NCCO from the answer_url webhook and sends the DTMF input to the eventUrl webhook defined in the initial NCCO
 * Create your NCCO using the IVR use case with the required Task and Agent capabilities (link to demo app) link it to your application (answer_url)
-* Create client application to manage Comms Router and Voice or install and use the [Comms Router demo application](../demo-application)
+* Create client application to manage Comms Router and Voice or install and use the [Comms Router demo application](../applications/demo/)
 
 ## 2. Create Routers
 When creating a router you can either specify the router `ref` ID for example `MY_ROUTER` or leave blank and it will be automatically generated. All other resources are identified by the their `ref` ID. When creating a router the `ref` ID must be unique.

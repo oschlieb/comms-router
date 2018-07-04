@@ -1,9 +1,9 @@
 # Introduction to Comms Router
-The Nexmo Comms Router API enables businesses to leverage self-hosted or on premises APIs to manage Contact Centre task management. The modern Contact Center is designed to be flexible and extensible through allowing developers to customise integrations and leverage Nexmo Comms Router API as a key building block.
+The Nexmo Comms Router API enables businesses to leverage self-hosted or on premises APIs to manage Contact Center task management. The modern Contact Center is designed to be flexible and extensible through allowing developers to customise integrations and leverage Nexmo Comms Router API as a key building block.
 
 As part of the Contact Center building blocks architecture this documentation also includes:
-* A [Demo Application](demo-application/README.md) to show how to apply the API in a Contact Center use case.
-* A [Graphical User Interface Application](gui-application/README.md) to enable admins to manage agents.
+* A [Demo Application](applications/demo/README.md) to show how to apply the API in a Contact Center use case.
+* A [Graphical User Interface Application](applications/demo/gui/README.md) to enable admins to manage agents.
 
 ## Pre-requisites
 * Nexmo Account https://dashboard.nexmo.com/sign-up
@@ -28,7 +28,7 @@ As part of the Contact Center building blocks architecture this documentation al
 # Customer Journey Flows
 
 ## Inbound Voice Call (PSTN):
-Can be set up using the current [demo application](tree/master/demo-application) for an inbound Contact Center use case.
+Can be set up using the current [demo application](applications/demo) for an inbound Contact Center use case.
 
 1. Customer calls Nexmo phone number
 2. Client receives request via Webhook and NCCO request with predefined IVR options
