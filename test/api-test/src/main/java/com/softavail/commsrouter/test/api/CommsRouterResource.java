@@ -22,7 +22,14 @@ public enum CommsRouterResource {
   PLAN,
   QUEUE,
   AGENT,
-  TASK;
+  SKILL,
+  TASK,
+  EROUTER,
+  EPLAN,
+  EQUEUE,
+  EAGENT,
+  ESKILL,
+  ETASK;
 
   @Override
   public String toString() {

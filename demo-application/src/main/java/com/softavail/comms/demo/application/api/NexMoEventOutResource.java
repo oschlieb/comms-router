@@ -1,6 +1,7 @@
 package com.softavail.comms.demo.application.api;
 
 import com.nexmo.client.NexmoClientException;
+import com.nexmo.client.voice.ModifyCallAction;
 import com.softavail.comms.demo.application.services.Configuration;
 import com.softavail.comms.demo.application.services.NexMoService;
 import com.softavail.comms.nexmo.model.NexmoCallEvent;
@@ -16,6 +17,7 @@ import com.softavail.commsrouter.api.dto.model.attribute.BooleanAttributeValueDt
 import com.softavail.commsrouter.api.dto.model.attribute.DoubleAttributeValueDto;
 import com.softavail.commsrouter.api.dto.model.attribute.StringAttributeValueDto;
 import com.softavail.commsrouter.api.exception.BadValueException;
+import com.softavail.commsrouter.api.exception.CommsRouterException;
 import com.softavail.commsrouter.api.exception.NotFoundException;
 import com.softavail.commsrouter.client.TaskServiceClient;
 import org.apache.logging.log4j.LogManager;
@@ -277,7 +279,7 @@ public class NexMoEventOutResource {
   private void hangupCall(String uuid) {
     try {
       LOGGER.debug("Request to hangup call uuid: {}", uuid);
-      nexMoService.getVoiceClient().modifyCall(uuid, "hangup");
+      nexMoService.getVoiceClient().modifyCall(uuid, ModifyCallAction.HANGUP);
     } catch (IOException | NexmoClientException e) {
       LOGGER.error("Hangup call failed with error: {}", e.getLocalizedMessage());
       e.printStackTrace();
@@ -308,37 +310,37 @@ public class NexMoEventOutResource {
 
       valueDto.accept( new AttributeValueVisitor() {
         @Override
-        public void handleStringValue(StringAttributeValueDto value) throws IOException {
+        public void handleStringValue(StringAttributeValueDto value) throws CommsRouterException {
           result.add(value.getValue());
         }
 
         @Override
-        public void handleDoubleValue(DoubleAttributeValueDto value) throws IOException {
+        public void handleDoubleValue(DoubleAttributeValueDto value) throws CommsRouterException {
           // TODO Auto-generated method stub
 
         }
 
         @Override
-        public void handleBooleanValue(BooleanAttributeValueDto value) throws IOException {
+        public void handleBooleanValue(BooleanAttributeValueDto value) throws CommsRouterException {
           // TODO Auto-generated method stub
 
         }
 
         @Override
         public void handleArrayOfStringsValue(ArrayOfStringsAttributeValueDto value)
-            throws IOException {
+            throws CommsRouterException {
           // TODO Auto-generated method stub
 
         }
 
         @Override
         public void handleArrayOfDoublesValue(ArrayOfDoublesAttributeValueDto value)
-            throws IOException {
+            throws CommsRouterException {
           // TODO Auto-generated method stub
 
         }
       });
-    } catch (IOException e) {
+    } catch (CommsRouterException e) {
       LOGGER.error(e.getLocalizedMessage());
     }
 

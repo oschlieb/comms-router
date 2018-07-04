@@ -459,10 +459,11 @@
                                                                                 ("department" (fourth id)))
                                                     :name (fifth id)
                                                     :router-id router-id)
-                                        (eagent-set :id (first id) :state "ready":address :null
-                                                    :capabilities :null
-                                                    :name :null
-                                                    :router-id router-id )))
+                                        ;; (eagent-set :id (first id) :state "ready":address :null
+                                        ;;             :capabilities :null
+                                        ;;             :name :null
+                                        ;;             :router-id router-id )
+                                        ))
                      '(("en-es-support" "12312377880" ("en" "es") "support" "Pablo Jenkins")
                        ("en-sales" "12017621651" ("en") "sales" "John Seller")
                        ("es-sales" "12017621652" ("es") "sales" "Domingo Secada")))
@@ -621,3 +622,26 @@
     (tand (eagent-set :router-id router :id agent :state "ready")
           (dump-time (twait (eagent :router-id router :id agent :checks (has-kv "state" "busy"))
                        :timeout 200)))))
+
+(defun test-plan-task(&key (predicate "true") (requirements (jsown:new-js )))
+  (tlet ((router (js-val "ref") (erouter-new))
+         (default-queue  (js-val "ref") (equeue-new :router-id router :description "default queue" :predicate "false"))
+         (queue  (js-val "ref") (equeue-new :router-id router :description "destination" :predicate "false"))
+         (plan (js-val "ref") (eplan-new :router-id router :predicate predicate :default-queue-id default-queue :queue-id queue))
+         (task  (js-val "ref") (etask-new :router-id router :plan-id plan :queue-id :null :requirements requirements)))
+    (etask :router-id router :id task :checks (contains queue))))
+
+(defun test-plan-task-fixed(router-name &key (predicate "true") (requirements (jsown:new-js )))
+  (tlet ((router (js-val "ref") (erouter-put :id router-name))
+         (default-queue  (js-val "ref") (equeue-put :router-id router :id "default-queue" :description "default queue" :predicate "false"))
+         (queue  (js-val "ref") (equeue-put :router-id router :id "destination-queue" :description "destination" :predicate "false"))
+         (plan (js-val "ref") (eplan-put :router-id router :id "simple-plan" :predicate predicate :default-queue-id default-queue :queue-id queue))
+         (task  (js-val "ref") (etask-new :router-id router :plan-id plan :queue-id :null :requirements requirements)))
+    (etask :router-id router :id task :checks (contains queue))))
+
+
+(defun match-agent(&key (predicate "true") (capabilities (jsown:new-js ("language" "en"))))
+  (tlet ((router (js-val "ref") (erouter-new))
+         (queue  (js-val "ref") (equeue-new :router-id router :description "destination" :predicate predicate))
+         (agent (js-val "ref") (eagent-new :router-id router :capabilities capabilities)))
+    (eagent :router-id router :id agent :checks (contains queue))))

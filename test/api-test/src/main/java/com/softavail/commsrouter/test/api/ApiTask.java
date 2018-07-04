@@ -32,73 +32,40 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.HashMap;
 
-public class ApiTask extends Resource {
+public class ApiTask extends GResource<CreateTaskArg, UpdateTaskArg> {
 
   private static final Logger LOGGER = LogManager.getLogger(ApiTask.class);
 
   public ApiTask(HashMap<CommsRouterResource, String> state) {
-    super(state);
+    super(state,"/routers/{routerRef}/tasks");
   }
 
   public ValidatableResponse list(String routerRef) {
     return list(routerRef, "");
   }
-
   
   public ValidatableResponse list(String routerRef, String query) {
-    return given()
-      .pathParam("query", query)
-      .contentType("application/json")
-      .pathParam("routerRef", routerRef)
-      .when().get("/routers/{routerRef}/tasks?{query}")
-      .then();
+    return list(querySpec(routerRef, query));
   }
 
   public ValidatableResponse get(String routerRef, String taskRef) {
-    return given()
-        .contentType("application/json")
-        .pathParam("routerRef", routerRef)
-        .pathParam("taskRef", taskRef)
-        .when().get("/routers/{routerRef}/agents/{taskRef}")
-        .then();
+    return get(getSpec(routerRef, taskRef));
   }
 
   public ValidatableResponse delete(String routerRef, String taskRef) {
-    return given()
-        .contentType("application/json")
-        .pathParam("routerRef", routerRef)
-        .pathParam("taskRef", taskRef)
-        .when().delete("/routers/{routerRef}/tasks/{taskRef}")
-        .then();
+    return delete(getSpec(routerRef, taskRef));
   }
 
   public ValidatableResponse create(String routerRef, CreateTaskArg args) {
-    return given()
-        .contentType("application/json")
-        .pathParam("routerRef", routerRef)
-        .body(args)
-        .when().post("/routers/{routerRef}/tasks")
-        .then();
+    return create(createSpec(routerRef),args);
   }
 
   public ValidatableResponse update(String routerRef, String taskRef, UpdateTaskArg args) {
-    return given()
-        .contentType("application/json")
-        .pathParam("routerRef", routerRef)
-        .pathParam("taskRef", taskRef)
-        .body(args)
-        .when().post("/routers/{routerRef}/tasks/{taskRef}")
-        .then();
+    return update(getSpec(routerRef, taskRef), args);
   }
 
   public ValidatableResponse replace(String routerRef, String taskRef, CreateTaskArg args) {
-    return given()
-        .contentType("application/json")
-        .pathParam("routerRef", routerRef)
-        .pathParam("taskRef", taskRef)
-        .body(args)
-        .when().put("/routers/{routerRef}/tasks/{taskRef}")
-        .then();
+    return replace(getSpec(routerRef, taskRef), args);
   }
 
 }

@@ -16,8 +16,11 @@
 
 package com.softavail.api.test;
 
+import com.softavail.commsrouter.test.api.Agent;
 import com.softavail.commsrouter.test.api.Queue;
+import com.softavail.commsrouter.test.api.ApiQueue;
 import com.softavail.commsrouter.test.api.CommsRouterResource;
+import com.softavail.commsrouter.test.api.Skill;
 import com.softavail.commsrouter.test.api.Task;
 import com.softavail.commsrouter.test.api.Router;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -27,14 +30,20 @@ import static org.hamcrest.Matchers.equalTo;
 
 import com.softavail.commsrouter.api.dto.arg.CreateQueueArg;
 import com.softavail.commsrouter.api.dto.arg.CreateRouterArg;
+import com.softavail.commsrouter.api.dto.arg.CreateSkillArg;
 import com.softavail.commsrouter.api.dto.arg.CreateTaskArg;
 import com.softavail.commsrouter.api.dto.model.ApiObjectRef;
 import com.softavail.commsrouter.api.dto.model.QueueDto;
+import com.softavail.commsrouter.api.dto.model.skill.*;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
-import com.softavail.commsrouter.test.api.Agent;
+
+import java.util.Collections;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.junit.*;
 
@@ -47,6 +56,7 @@ public class QueueTest extends BaseTest{
 
   private HashMap<CommsRouterResource, String> state = new HashMap<CommsRouterResource, String>();
   private Router r = new Router(state);
+  private Skill s = new Skill(state);
   private Queue q = new Queue(state);
 
   @Before
@@ -57,11 +67,18 @@ public class QueueTest extends BaseTest{
     routerArg.setDescription(description);
     routerArg.setName(name);
     ApiObjectRef ref = r.create(routerArg);
+    s.replace("language", new CreateSkillArg.Builder()
+              .name("language")
+              .description("domain")
+              .domain( new EnumerationAttributeDomainDto(Stream.of("en","es").collect(Collectors.toSet())))
+              .multivalue(false)
+              .build());
   }
   
   @After
   public void deleteRouter() {
     q.delete();
+    s.delete();
     r.delete();
   }
 
@@ -91,6 +108,7 @@ public class QueueTest extends BaseTest{
     queueArg.setDescription(description);
     queueArg.setPredicate(predicate);
     state.put(CommsRouterResource.QUEUE, queueRef);
+    state.put(CommsRouterResource.EQUEUE, queueRef);
     ApiObjectRef ref = q.replace(queueArg);
     QueueDto queue = q.get();
     assertThat(queue.getPredicate(), is(predicate));
@@ -109,6 +127,8 @@ public class QueueTest extends BaseTest{
     queueArg.setDescription(description);
     queueArg.setPredicate(predicate);
     state.put(CommsRouterResource.QUEUE, queueRef);
+    state.put(CommsRouterResource.EQUEUE, queueRef);
+    
     ApiObjectRef ref = q.replace(queueArg);
     QueueDto queue = q.get();
     assertThat(queue.getPredicate(), is(predicate));
@@ -116,11 +136,11 @@ public class QueueTest extends BaseTest{
     assertThat(queue.getRef(), is(queueRef));
 
     queueArg.setDescription("newDescription");
-    queueArg.setPredicate("2==2");
+    queueArg.setPredicate("language==en");
 
     ref = q.replace(queueArg);
     queue = q.get();
-    assertThat(queue.getPredicate(), is("2==2"));
+    assertThat(queue.getPredicate(), is("language==en"));
     assertThat(queue.getDescription(), is("newDescription"));
     assertThat(queue.getRef(), is(queueRef));
 
@@ -154,7 +174,7 @@ public class QueueTest extends BaseTest{
     queue = q.get();
     assertThat(queue.getPredicate(), is(predicate));
     assertThat(queue.getDescription(), is(newDescription));
-    String newPredicate = "2==2";
+    String newPredicate = "language==en";
     queueArg.setDescription(null);
     queueArg.setPredicate(newPredicate);
 
@@ -230,8 +250,12 @@ public class QueueTest extends BaseTest{
 
     queueArg.setDescription("qdescription");
     queueArg.setPredicate("1==1");
-
-    q.replaceResponse(queueArg).statusCode(500).body("error.description",
+    ApiQueue api_q = new ApiQueue(state);
+    
+    api_q.replace(state.get(CommsRouterResource.ROUTER),
+                  state.get(CommsRouterResource.QUEUE),
+                  queueArg)
+      .statusCode(500).body("error.description",
         equalTo("Cannot delete or update 'queue' as there is record in 'task' that refer to it."));
     QueueDto queue = q.get();
     assertThat(queue.getPredicate(), is(predicate));
@@ -258,11 +282,11 @@ public class QueueTest extends BaseTest{
     assertThat(q.size(), is(0));
 
     queueArg.setDescription("qdescription");
-    queueArg.setPredicate("2==2");
+    queueArg.setPredicate("language==en");
 
     q.replaceResponse(queueArg).statusCode(201);
     QueueDto queue = q.get();
-    assertThat(queue.getPredicate(), is("2==2"));
+    assertThat(queue.getPredicate(), is("language==en"));
     assertThat(queue.getDescription(), is("qdescription"));
     assertThat(queue.getRef(), is(ref.getRef()));
     a.delete();    
@@ -289,7 +313,12 @@ public class QueueTest extends BaseTest{
     queueArg.setDescription("qdescription");
     queueArg.setPredicate("1==something1");
 
-    q.replaceResponse(queueArg).statusCode(500).body("error.description",
+    ApiQueue api_q = new ApiQueue(state);
+    
+    api_q.replace(state.get(CommsRouterResource.ROUTER),
+                  state.get(CommsRouterResource.QUEUE),
+                  queueArg)
+      .statusCode(500).body("error.description",
         equalTo("Cannot delete or update 'queue' as there is record in 'task' that refer to it."));
     QueueDto queue = q.get();
     assertThat(queue.getPredicate(), is(predicate));

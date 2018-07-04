@@ -30,16 +30,33 @@ import com.softavail.commsrouter.api.dto.arg.*;
 import com.softavail.commsrouter.api.dto.model.*;
 import com.softavail.commsrouter.test.api.*;
 
+import com.softavail.commsrouter.api.dto.model.skill.*;
 
 import org.junit.Test;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.Set;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /** Unit test for query params. */
 public class QueryParamsTest extends BaseTest {
-
+  private void createSkill(HashMap<CommsRouterResource, String> state) {
+    List<NumberInterval> intervals = Stream.of(new NumberInterval(new NumberIntervalBoundary(1.0),new NumberIntervalBoundary(2.0)),
+                                               new NumberInterval(new NumberIntervalBoundary(2.0),new NumberIntervalBoundary(3.0)),
+                                               new NumberInterval(new NumberIntervalBoundary(4.0,false),new NumberIntervalBoundary(50.0,true))
+                                               ).collect(Collectors.toList());
+    new Skill(state).replace("num", new CreateSkillArg.Builder()
+              .name("num")
+              .description("age domain")
+              .domain( new NumberAttributeDomainDto(intervals))
+              .multivalue(false)
+              .build());
+  }
+  
   @Test
   public void filterRouter() {
     HashMap<CommsRouterResource, String> state = new HashMap<CommsRouterResource, String>();
@@ -87,7 +104,7 @@ public class QueryParamsTest extends BaseTest {
     Router r = new Router(state);
     ApiObjectRef ref = r.create(new CreateRouterArg());
     ApiRouter api_r = new ApiRouter(state);
-    api_r.list("sort=-ref").body("[1].ref", response -> lessThan(response.path("[0].ref")));
+    api_r.list("sort=-ref").body("[0].ref.toUpperCase()", response -> greaterThan(response.path("[1].ref.toUpperCase()")));
     r.delete();
   }
 
@@ -97,7 +114,7 @@ public class QueryParamsTest extends BaseTest {
     Router r = new Router(state);
     ApiObjectRef ref = r.create(new CreateRouterArg());
     ApiRouter api_r = new ApiRouter(state);
-    api_r.list("sort=+ref").body("[0].ref", response -> lessThan(response.path("[1].ref")));
+    api_r.list("sort=+ref").body("[0].ref.toUpperCase()", response -> lessThan(response.path("[1].ref.toUpperCase()")));
     r.delete();
   }
 
@@ -106,10 +123,11 @@ public class QueryParamsTest extends BaseTest {
     HashMap<CommsRouterResource, String> state = new HashMap<CommsRouterResource, String>();
     Router r = new Router(state);
     ApiObjectRef ref = r.create(new CreateRouterArg());
+    createSkill(state);
     Queue q = new Queue(state);
-    q.create(new CreateQueueArg.Builder().predicate("2").build());
-    q.create(new CreateQueueArg.Builder().predicate("1").build());
-    q.create(new CreateQueueArg.Builder().predicate("3").build());
+    q.create(new CreateQueueArg.Builder().predicate("num==2").build());
+    q.create(new CreateQueueArg.Builder().predicate("num==1").build());
+    q.create(new CreateQueueArg.Builder().predicate("num==3").build());
     ApiQueue api_q = new ApiQueue(state);
     api_q.list(ref.getRef(),"sort=-predicate").body("[1].predicate", response -> lessThan(response.path("[0].predicate")));
     //r.delete();
@@ -120,25 +138,29 @@ public class QueryParamsTest extends BaseTest {
     HashMap<CommsRouterResource, String> state = new HashMap<CommsRouterResource, String>();
     Router r = new Router(state);
     ApiObjectRef ref = r.create(new CreateRouterArg());
+    createSkill(state);
+    
     Queue q = new Queue(state);
-    q.create(new CreateQueueArg.Builder().predicate("2").build());
-    q.create(new CreateQueueArg.Builder().predicate("1").build());
-    q.create(new CreateQueueArg.Builder().predicate("10").build());
+    q.create(new CreateQueueArg.Builder().predicate("num==2").build());
+    q.create(new CreateQueueArg.Builder().predicate("num==1").build());
+    q.create(new CreateQueueArg.Builder().predicate("num==10").build());
     ApiQueue api_q = new ApiQueue(state);
-    api_q.list(ref.getRef(), "q=predicate!=1").body("size()",is(2));
+    api_q.list(ref.getRef(), "q=predicate!='num==1'").body("size()",is(2));
     //r.delete();
   }
 
   public void filterQueueEmpty() {
     HashMap<CommsRouterResource, String> state = new HashMap<CommsRouterResource, String>();
     Router r = new Router(state);
+    createSkill(state);
+    
     ApiObjectRef ref = r.create(new CreateRouterArg());
     Queue q = new Queue(state);
-    q.create(new CreateQueueArg.Builder().predicate("2").build());
-    q.create(new CreateQueueArg.Builder().predicate("1").build());
-    q.create(new CreateQueueArg.Builder().predicate("10").build());
+    q.create(new CreateQueueArg.Builder().predicate("num==2").build());
+    q.create(new CreateQueueArg.Builder().predicate("num==1").build());
+    q.create(new CreateQueueArg.Builder().predicate("num==10").build());
     ApiQueue api_q = new ApiQueue(state);
-    api_q.list(ref.getRef(), "q=predicate!=").body("size()",is(2));
+    api_q.list(ref.getRef(), "q=predicate!=").body("size()",is("num==2"));
     //r.delete();
   }
 
@@ -147,12 +169,14 @@ public class QueryParamsTest extends BaseTest {
     HashMap<CommsRouterResource, String> state = new HashMap<CommsRouterResource, String>();
     Router r = new Router(state);
     ApiObjectRef ref = r.create(new CreateRouterArg());
+    createSkill(state);
+    
     Queue q = new Queue(state);
-    q.create(new CreateQueueArg.Builder().predicate("2").build());
-    q.create(new CreateQueueArg.Builder().predicate("1").build());
-    q.create(new CreateQueueArg.Builder().predicate("3").build());
+    q.create(new CreateQueueArg.Builder().predicate("num==2").build());
+    q.create(new CreateQueueArg.Builder().predicate("num==1").build());
+    q.create(new CreateQueueArg.Builder().predicate("num==3").build());
     ApiQueue api_q = new ApiQueue(state);
-    api_q.list(ref.getRef(), "q=predicate==1").body("[0].predicate", is("1"));
+    api_q.list(ref.getRef(), "q=predicate=='num==1'").body("[0].predicate", is("num==1"));
     //r.delete();
   }
 

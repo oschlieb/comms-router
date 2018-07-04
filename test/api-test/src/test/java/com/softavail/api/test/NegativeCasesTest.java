@@ -21,13 +21,18 @@ import com.softavail.commsrouter.api.dto.arg.*;
 import com.softavail.commsrouter.test.api.*;
 import static org.hamcrest.Matchers.*;
 import com.softavail.commsrouter.api.dto.model.*;
+import com.softavail.commsrouter.api.dto.model.skill.*;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.io.OutputStreamWriter;
 import java.io.IOException;
 
 import java.util.HashMap;
+import java.util.List;
+import java.util.stream.Stream;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -36,6 +41,8 @@ import java.util.Collections;
 import java.util.stream.Collectors;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+
+import javax.ws.rs.core.HttpHeaders;
 
 public class NegativeCasesTest extends BaseTest {
   private static final String longText =  "longName със символи на кирилица345678901234567890longName със символи на кирилица345678901234567890"+"longName със символи на кирилица345678901234567890longName със символи на кирилица345678901234567890"+"longName със символи на кирилица345678901234567890longName със символи на кирилица345678901234567890";
@@ -201,13 +208,26 @@ public class NegativeCasesTest extends BaseTest {
     HashMap<CommsRouterResource, String> state = new HashMap<CommsRouterResource, String>();
     Router r = new Router(state);
     r.create(new CreateRouterArg.Builder().description(utfText).build());
+    Skill s = new Skill(state);
+    List<NumberInterval> intervals = Stream.of(new NumberInterval(new NumberIntervalBoundary(1.0),new NumberIntervalBoundary(2.0)),
+                                               new NumberInterval(new NumberIntervalBoundary(2.0),new NumberIntervalBoundary(3.0)),
+                                               new NumberInterval(new NumberIntervalBoundary(4.0,false),new NumberIntervalBoundary(50.0,true))
+                                               ).collect(Collectors.toList());
+
+    s.replace("true", new CreateSkillArg.Builder()
+              .name("true")
+              .description("age domain")
+              .domain( new NumberAttributeDomainDto(intervals))
+              .multivalue(false)
+              .build());
+
     ApiQueue api_q = new ApiQueue(state);
     api_q.create(state.get(CommsRouterResource.ROUTER)
                  , new CreateQueueArg.Builder()
                  .predicate("==true")
                  .description("desc").build())
       .statusCode(400)
-      .body("error.description",is("Predicate \"==true\" failed with error: Expression is invalid. "));
+      .body("error.description",startsWith("Invalid expression: cz.jirutka.rsql.parser.ParseException: Encountered "));
   }
 
   @Test
@@ -221,7 +241,7 @@ public class NegativeCasesTest extends BaseTest {
                  .predicate("alabala")
                  .description("desc").build())
       .statusCode(400)
-      .body("error.description",is("Predicate \"alabala\" failed with error: Expression is invalid. For input string: \"alabala\""));
+      .body("error.description",startsWith("Invalid expression: cz.jirutka.rsql.parser.ParseException: "));
   }
   
   @Test
@@ -234,37 +254,61 @@ public class NegativeCasesTest extends BaseTest {
                  , new CreateQueueArg.Builder()
                  .predicate("")
                  .description("desc").build())
-      .statusCode(400)
-      .body("error.description",is("Expression cannot be NULL or empty."));
+      .statusCode(201)
+      .body("ref",notNullValue());
   }
   
   @Test
   public void createQueueWrongPredicateSubexp() {
     HashMap<CommsRouterResource, String> state = new HashMap<CommsRouterResource, String>();
     Router r = new Router(state);
+    Skill s = new Skill(state);
     r.create(new CreateRouterArg.Builder().description(utfText).build());
+    List<NumberInterval> intervals = Stream.of(new NumberInterval(new NumberIntervalBoundary(1.0),new NumberIntervalBoundary(2.0)),
+                                               new NumberInterval(new NumberIntervalBoundary(2.0),new NumberIntervalBoundary(3.0)),
+                                               new NumberInterval(new NumberIntervalBoundary(4.0,false),new NumberIntervalBoundary(50.0,true))
+                                               ).collect(Collectors.toList());
+
+    s.replace("true", new CreateSkillArg.Builder()
+              .name("true")
+              .description("age domain")
+              .domain( new NumberAttributeDomainDto(intervals))
+              .multivalue(false)
+              .build());
+
     ApiQueue api_q = new ApiQueue(state);
     api_q.create(state.get(CommsRouterResource.ROUTER)
                  , new CreateQueueArg.Builder()
                  .predicate("true==[invalidConstant")
                  .description("desc").build())
-      .statusCode(400)
-      .body("error.description",is("Predicate \"true==[invalidConstant\" failed with error: Expression is invalid. For input string: \"[invalidConstant\""));
+      .statusCode(400).body("error.description", containsString("Invalid number argument:[invalidConstant"));
   }
   
-
   @Test
   public void createQueueWrongPredicateSubexp1() {
     HashMap<CommsRouterResource, String> state = new HashMap<CommsRouterResource, String>();
     Router r = new Router(state);
     r.create(new CreateRouterArg.Builder().description(utfText).build());
+    Skill s = new Skill(state);
+    List<NumberInterval> intervals = Stream.of(new NumberInterval(new NumberIntervalBoundary(1.0),new NumberIntervalBoundary(2.0)),
+                                               new NumberInterval(new NumberIntervalBoundary(2.0),new NumberIntervalBoundary(3.0)),
+                                               new NumberInterval(new NumberIntervalBoundary(4.0,false),new NumberIntervalBoundary(50.0,true))
+                                               ).collect(Collectors.toList());
+
+    s.replace("true", new CreateSkillArg.Builder()
+              .name("true")
+              .description("true domain")
+              .domain( new NumberAttributeDomainDto(intervals))
+              .multivalue(false)
+              .build());
+
     ApiQueue api_q = new ApiQueue(state);
     api_q.create(state.get(CommsRouterResource.ROUTER)
                  , new CreateQueueArg.Builder()
                  .predicate("true==(invalidConstant)")
                  .description("desc").build())
       .statusCode(400)
-      .body("error.description",is("Predicate \"true==(invalidConstant)\" failed with error: Expression is invalid. For input string: \"invalidConstant\""));
+      .body("error.description", containsString("Invalid number argument:invalidConstant"));
   }
 
   @Test
@@ -272,12 +316,26 @@ public class NegativeCasesTest extends BaseTest {
     HashMap<CommsRouterResource, String> state = new HashMap<CommsRouterResource, String>();
     Router r = new Router(state);
     r.create(new CreateRouterArg.Builder().description(utfText).build());
+
+    Skill s = new Skill(state);
+    List<NumberInterval> intervals = Stream.of(new NumberInterval(new NumberIntervalBoundary(1.0),new NumberIntervalBoundary(2.0)),
+                                               new NumberInterval(new NumberIntervalBoundary(2.0),new NumberIntervalBoundary(3.0)),
+                                               new NumberInterval(new NumberIntervalBoundary(4.0,false),new NumberIntervalBoundary(50.0,true))
+                                               ).collect(Collectors.toList());
+
+    s.replace("true", new CreateSkillArg.Builder()
+              .name("true")
+              .description("age domain")
+              .domain( new NumberAttributeDomainDto(intervals))
+              .multivalue(false)
+              .build());
     ApiQueue api_q = new ApiQueue(state);
     api_q.create(state.get(CommsRouterResource.ROUTER)
                  , new CreateQueueArg.Builder()
                  .predicate("true==[invalidConstant]")
                  .description("desc").build())
-      .statusCode(201);
+      .statusCode(400) 
+      .body("error.description", containsString("Invalid number argument:[invalidConstant]"));
   }
   
   @Test
@@ -290,7 +348,7 @@ public class NegativeCasesTest extends BaseTest {
                  , new CreateQueueArg.Builder()
                  .predicate("10+10==21+(11+[1])")
                  .description("desc").build())
-      .statusCode(201);
+      .statusCode(400).body("error.description", containsString("Invalid expression: cz.jirutka.rsql.parser.ParseException: Encountered "));
   }
   
   @Test
@@ -575,7 +633,7 @@ public class NegativeCasesTest extends BaseTest {
     Router r = new Router(state);
     r.create(new CreateRouterArg.Builder().description(utfText).build());
     Agent a = new Agent(state);
-    a.create("en");
+    a.create(new CreateAgentArg());
     Queue q = new Queue(state);
     q.create(new CreateQueueArg.Builder()
              .predicate("true")
@@ -609,30 +667,41 @@ public class NegativeCasesTest extends BaseTest {
     assertThat(String.format("Check state (%s) to be busy.", resource.getState()),
                resource.getState(), is(AgentState.busy));
     ApiAgent api_a = new ApiAgent(state);
-    api_a.update(state.get(CommsRouterResource.ROUTER),
-                 state.get(CommsRouterResource.AGENT),
-                 new UpdateAgentArg.Builder().state(AgentState.ready).build())
+    String etag = api_a.update(state.get(CommsRouterResource.EAGENT),
+                               state.get(CommsRouterResource.ROUTER),
+                               state.get(CommsRouterResource.AGENT),
+                               new UpdateAgentArg.Builder().state(AgentState.ready).build())
       .statusCode(400)
-      .body("error.description",is("Changing state of a busy agent is not implemented. Complete corresponding task."));
-    api_a.update(state.get(CommsRouterResource.ROUTER),
+      .body("error.description",is("Changing state of a busy agent is not implemented. Complete corresponding task."))
+      .extract().header(HttpHeaders.ETAG);
+    assertThat(etag,equalTo(null));
+    
+    etag = api_a.update(state.get(CommsRouterResource.EAGENT),
+                 state.get(CommsRouterResource.ROUTER),
                  state.get(CommsRouterResource.AGENT),
                  new UpdateAgentArg.Builder().state(AgentState.offline).build())
       .statusCode(400)
-      .body("error.description",is("Changing state of a busy agent is not implemented. Complete corresponding task."));
+      .body("error.description",is("Changing state of a busy agent is not implemented. Complete corresponding task."))
+      .extract().header(HttpHeaders.ETAG);
+    assertThat(etag,equalTo(null));
 
-    api_a.update(state.get(CommsRouterResource.ROUTER),
+    etag = api_a.update(state.get(CommsRouterResource.EAGENT),
+                 state.get(CommsRouterResource.ROUTER),
                  state.get(CommsRouterResource.AGENT),
                  new UpdateAgentArg.Builder().state(AgentState.unavailable).build())
       .statusCode(400)
-      .body("error.description",is("Setting agent state to 'unavailable' not allowed"));
+      .body("error.description",is("Setting agent state to 'unavailable' not allowed"))
+      .extract().header(HttpHeaders.ETAG);
+    assertThat(etag,equalTo(null));
     
-    api_a.update(state.get(CommsRouterResource.ROUTER),
+    etag = api_a.update(state.get(CommsRouterResource.EAGENT),
+                 state.get(CommsRouterResource.ROUTER),
                  state.get(CommsRouterResource.AGENT),
                  new UpdateAgentArg.Builder().state(AgentState.busy).build())
       .statusCode(400)
-      .body("error.description",is("Setting agent state to 'busy' not allowed"));
+      .body("error.description",is("Setting agent state to 'busy' not allowed"))
+      .extract().header(HttpHeaders.ETAG);
+    assertThat(etag,equalTo(null));
     
   }
-
-  
 }

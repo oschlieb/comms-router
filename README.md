@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Introduction to Comms Router
 The Nexmo Comms Router API enables businesses to leverage self-hosted or on premises APIs to manage Contact Center task management. The modern Contact Center is designed to be flexible and extensible through allowing developers to customise integrations and leverage Nexmo Comms Router API as a key building block.
 

@@ -31,18 +31,23 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.ResponseHeader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.EntityTag;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 /**
  * Created by @author mapuo on 31.08.17.
@@ -67,7 +72,10 @@ public class PlanResource extends GenericRouterObjectResource<PlanDto> {
       value = "Add new Plan",
       notes = "Add new Plan and associate it with a Router")
   @ApiResponses({
-      @ApiResponse(code = 201, message = "Successful operation", response = ApiObjectRef.class)})
+      @ApiResponse(code = 201, message = "Successful operation", response = ApiObjectRef.class,
+          responseHeaders = {
+              @ResponseHeader(name = HttpHeaders.ETAG, description = "ETag of the resource",
+                  response = String.class)})})
   public Response create(CreatePlanArg planArg) throws CommsRouterException {
 
     LOGGER.debug("Creating plan {}", planArg);
@@ -83,7 +91,10 @@ public class PlanResource extends GenericRouterObjectResource<PlanDto> {
       value = "Replace an existing Plan",
       notes = "If the plan with the specified id does not exist, it creates it")
   @ApiResponses({
-      @ApiResponse(code = 201, message = "Successful operation", response = ApiObjectRef.class),
+      @ApiResponse(code = 201, message = "Successful operation", response = ApiObjectRef.class,
+          responseHeaders = {
+              @ResponseHeader(name = HttpHeaders.ETAG, description = "ETag of the resource",
+                  response = String.class)}),
       @ApiResponse(code = 400, message = "Invalid ID supplied",
           response = ExceptionPresentation.class),
       @ApiResponse(code = 404, message = "Plan not found",
@@ -100,8 +111,7 @@ public class PlanResource extends GenericRouterObjectResource<PlanDto> {
 
     LOGGER.debug("Replacing plan: {}, with id: {}", createArg, resourceId);
 
-    RouterObjectRef objectRef =
-        RouterObjectRef.builder().setRef(resourceId).setRouterRef(routerRef).build();
+    RouterObjectRef objectRef = getRouterObjectRef(resourceId);
 
     ApiObjectRef plan = planService.replace(createArg, objectRef);
 
@@ -114,25 +124,41 @@ public class PlanResource extends GenericRouterObjectResource<PlanDto> {
       value = "Update an existing Plan",
       notes = "Update some properties of an existing Plan")
   @ApiResponses({
-      @ApiResponse(code = 204, message = "Successful operation"),
+      @ApiResponse(code = 204, message = "Successful operation", responseHeaders = {
+              @ResponseHeader(name = HttpHeaders.ETAG, description = "ETag of the resource",
+                  response = String.class)}),
       @ApiResponse(code = 400, message = "Invalid ID supplied",
           response = ExceptionPresentation.class),
       @ApiResponse(code = 404, message = "Plan not found",
           response = ExceptionPresentation.class),
       @ApiResponse(code = 405, message = "Validation exception",
+          response = ExceptionPresentation.class),
+      @ApiResponse(code = 412, message = "Precondition Failed",
           response = ExceptionPresentation.class)})
-  public void update(
-      @ApiParam(value = "ID of the plan to be updated") @PathParam("resourceId") String resourceId,
-      @ApiParam(value = "UpdatePlanArg object representing parameters of the Plan to be updated",
-          required = true) UpdatePlanArg planArg)
+  public Response update(
+      @ApiParam(value = "ETag header from creating or retrieving resource", required = true)
+      @HeaderParam(HttpHeaders.IF_MATCH)
+          String ifMatch,
+      @ApiParam(value = "ID of the plan to be updated")
+      @PathParam("resourceId")
+          String resourceId,
+      @ApiParam(
+          value = "UpdatePlanArg object representing parameters of the Plan to be updated",
+          required = true)
+          UpdatePlanArg planArg)
       throws CommsRouterException {
 
     LOGGER.debug("Updating plan {}", planArg);
 
-    RouterObjectRef objectId =
-        RouterObjectRef.builder().setRef(resourceId).setRouterRef(routerRef).build();
+    RouterObjectRef objectId = getRouterObjectRef(resourceId);
+    objectId.setHash(ifMatch);
 
     planService.update(planArg, objectId);
+    PlanDto updatedPlan = planService.get(objectId);
+
+    return Response.status(Status.NO_CONTENT)
+        .tag(new EntityTag(updatedPlan.getHash()))
+        .build();
   }
 
 }

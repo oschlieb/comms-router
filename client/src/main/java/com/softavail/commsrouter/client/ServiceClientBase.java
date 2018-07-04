@@ -21,6 +21,7 @@ import com.softavail.commsrouter.api.dto.misc.PagingRequest;
 import com.softavail.commsrouter.api.dto.model.ApiObjectRef;
 import com.softavail.commsrouter.api.dto.model.RouterObjectRef;
 import com.softavail.commsrouter.api.interfaces.PaginatedService;
+import javax.ws.rs.core.Response.Status.Family;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -28,9 +29,12 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.IntStream;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
@@ -58,6 +62,8 @@ public abstract class ServiceClientBase<T extends ApiObjectRef, R extends ApiObj
     URI uri = getApiUrl().clone()
         .build();
 
+    LOGGER.debug("Doing POST to: {} with payload: {}", uri, obj);
+
     return getClient()
         .target(uri)
         .request(MediaType.APPLICATION_JSON_TYPE)
@@ -68,6 +74,8 @@ public abstract class ServiceClientBase<T extends ApiObjectRef, R extends ApiObj
   protected R post(Object obj, String containerId) {
     URI uri = getApiUrl().clone()
         .build(containerId);
+
+    LOGGER.debug("Doing POST to: {} with payload: {}", uri, obj);
 
     return getClient()
         .target(uri)
@@ -81,6 +89,8 @@ public abstract class ServiceClientBase<T extends ApiObjectRef, R extends ApiObj
         .path("{resourceRef}")
         .build(ref.getRef());
 
+    LOGGER.debug("Doing POST to: {} with payload: {}", uri, obj);
+
     getClient()
         .target(uri)
         .request(MediaType.APPLICATION_JSON_TYPE)
@@ -93,14 +103,24 @@ public abstract class ServiceClientBase<T extends ApiObjectRef, R extends ApiObj
         .path("{resourceRef}")
         .build(ref.getRouterRef(), ref.getRef());
 
-    getClient()
+    LOGGER.debug("Doing POST to: {} with payload: {}", uri, obj);
+
+    Response response = getClient()
         .target(uri)
         .request(MediaType.APPLICATION_JSON_TYPE)
+        .header(HttpHeaders.IF_MATCH, ref.getHash())
         .post(Entity.entity(obj, MediaType.APPLICATION_JSON_TYPE));
+    if (!response.getStatusInfo().getFamily().equals(Family.SUCCESSFUL)) {
+      // TODO Throw exception!
+    }
   }
 
   protected R put(Object obj, String ref) {
-    URI uri = getApiUrl().clone().build(ref);
+    URI uri = getApiUrl().clone()
+        .build(ref);
+
+    LOGGER.debug("Doing PUT to: {} with payload: {}", uri, obj);
+
     return getClient()
         .target(uri)
         .request(MediaType.APPLICATION_JSON_TYPE)
@@ -112,6 +132,8 @@ public abstract class ServiceClientBase<T extends ApiObjectRef, R extends ApiObj
         .path("{resourceRef}")
         .build(ref.getRouterRef(), ref.getRef());
 
+    LOGGER.debug("Doing PUT to: {} with payload: {}", uri, obj);
+
     return getClient()
         .target(uri)
         .request(MediaType.APPLICATION_JSON_TYPE)
@@ -121,33 +143,52 @@ public abstract class ServiceClientBase<T extends ApiObjectRef, R extends ApiObj
   protected T getItem(ApiObjectRef ref) {
     URI uri = getApiUrl().clone().path(ref.getRef()).build();
 
-    return getClient()
+    LOGGER.debug("Doing GET from: {}", uri);
+
+    Response response = getClient()
         .target(uri)
         .request(MediaType.APPLICATION_JSON_TYPE)
-        .get(responseType);
+        .get();
+
+    T t = response.readEntity(responseType);
+    t.setHash(response.getHeaderString(HttpHeaders.ETAG));
+
+    return t;
   }
 
   protected T getItem(RouterObjectRef ref) {
     URI uri = getApiUrl().clone()
         .path("{resourceId}").build(ref.getRouterRef(), ref.getRef());
 
-    return getClient()
+    LOGGER.debug("Doing GET from: {}", uri);
+
+    Response response = getClient()
         .target(uri)
         .request(MediaType.APPLICATION_JSON_TYPE)
-        .get(responseType);
+        .get();
+
+    T t = response.readEntity(responseType);
+    t.setHash(response.getHeaderString(HttpHeaders.ETAG));
+
+    return t;
   }
 
-  protected List<T> getList() {
-    return getClient()
-        .target(getApiUrl().clone())
-        .request(MediaType.APPLICATION_JSON_TYPE)
-        .get(new GenericType<List<T>>() {});
-  }
-
-  protected PaginatedList<T> getList(PagingRequest request) {
+  protected PaginatedList<T> getList(PagingRequest request, GenericType<List<T>> genericType) {
     UriBuilder uriBuilder = getApiUrl().clone()
-        .queryParam(PaginatedService.TOKEN_PARAM, request.getToken())
         .queryParam(PaginatedService.ITEMS_PER_PAGE_PARAM, request.getPerPage());
+
+    if (request.getToken() != null) {
+      uriBuilder.queryParam(PaginatedService.TOKEN_PARAM, request.getToken());
+    }
+
+    if (request.getSort() != null) {
+      uriBuilder.queryParam(PaginatedService.SORT_PARAM, request.getSort());
+    }
+
+    if (request.getQuery() != null) {
+      uriBuilder.queryParam(PaginatedService.QUERY_PARAM, request.getQuery());
+    }
+
     URI uri;
     if (request.isRouterRefAvailable()) {
       uri = uriBuilder.build(request.getRouterRef());
@@ -155,19 +196,32 @@ public abstract class ServiceClientBase<T extends ApiObjectRef, R extends ApiObj
       uri = uriBuilder.build();
     }
 
+    LOGGER.debug("Doing GET from: {}", uri);
+
     Response response = getClient()
         .target(uri)
         .request(MediaType.APPLICATION_JSON_TYPE)
         .get();
 
-    List<T> list = response.readEntity(new GenericType<List<T>>() {});
+    List<T> list = response.readEntity(genericType);
     String nextToken = response.getHeaderString(PaginatedService.NEXT_TOKEN_HEADER);
+
+    String etag = Optional
+        .ofNullable(response.getHeaderString(HttpHeaders.ETAG))
+        .orElse("");
+    String[] etags = etag.split(";");
+    if (list.size() == etags.length) {
+      IntStream.range(0, list.size())
+          .forEach(idx -> list.get(idx).setHash(etags[idx]));
+    }
 
     return new PaginatedList<>(list, nextToken);
   }
 
   protected void deleteRequest(ApiObjectRef ref) {
     URI uri = getApiUrl().clone().path(ref.getRef()).build();
+
+    LOGGER.debug("Doing DELETE to: {}", uri);
 
     getClient()
         .target(uri)
@@ -179,6 +233,8 @@ public abstract class ServiceClientBase<T extends ApiObjectRef, R extends ApiObj
     URI uri = getApiUrl().clone()
         .path("{resourceRef}")
         .build(ref.getRouterRef(), ref.getRef());
+
+    LOGGER.debug("Doing DELETE to: {}", uri);
 
     getClient()
         .target(uri)

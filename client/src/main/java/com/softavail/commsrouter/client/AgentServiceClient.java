@@ -26,8 +26,10 @@ import com.softavail.commsrouter.api.dto.model.RouterObjectRef;
 import com.softavail.commsrouter.api.exception.CommsRouterException;
 import com.softavail.commsrouter.api.interfaces.AgentService;
 
+import java.util.List;
 import javax.inject.Inject;
 import javax.ws.rs.client.Client;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.UriBuilder;
 
 /**
@@ -80,7 +82,7 @@ public class AgentServiceClient extends ServiceClientBase<AgentDto, ApiObjectRef
   public void update(UpdateAgentArg updateArg, RouterObjectRef objectRef)
       throws CommsRouterException {
 
-    put(updateArg, objectRef);
+    post(updateArg, objectRef);
   }
 
   @Override
@@ -94,9 +96,9 @@ public class AgentServiceClient extends ServiceClientBase<AgentDto, ApiObjectRef
   public PaginatedList<AgentDto> list(PagingRequest request)
       throws CommsRouterException {
 
-    PagingRequest pagingRequest =
-        new PagingRequest(routerRef, request.getToken(), request.getPerPage(), null, null); // TODO
-    return getList(pagingRequest);
+    PagingRequest pagingRequest = new PagingRequest(
+        routerRef, request.getToken(), request.getPerPage(), request.getSort(), request.getQuery());
+    return getList(pagingRequest, new GenericType<List<AgentDto>>() {});
   }
 
   @Override

@@ -24,19 +24,27 @@ import static org.hamcrest.Matchers.isEmptyString;
 import static org.hamcrest.Matchers.not;
 
 import com.softavail.commsrouter.api.dto.arg.CreateRouterArg;
+import com.softavail.commsrouter.api.dto.arg.UpdateRouterArg;
 
+import io.restassured.builder.RequestSpecBuilder;
+import io.restassured.builder.ResponseSpecBuilder;
 import io.restassured.response.ValidatableResponse;
+
+import io.restassured.specification.RequestSpecification;
+import io.restassured.specification.ResponseSpecification;
+
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.HashMap;
 
-public class ApiRouter extends Resource {
+public class ApiRouter extends GResource<CreateRouterArg, UpdateRouterArg> {
 
   private static final Logger LOGGER = LogManager.getLogger(ApiRouter.class);
 
   public ApiRouter(HashMap<CommsRouterResource, String> state) {
-      super(state);
+    super(state,"/routers");
   }
 
   public ValidatableResponse list() {
@@ -44,53 +52,26 @@ public class ApiRouter extends Resource {
   }
 
   public ValidatableResponse list(String query) {
-    return given()
-      .pathParam("query", query)
-      .contentType("application/json")
-      .when().get("/routers?{query}")
-      .then();
+    return list(querySpec(query));
   }
 
   public ValidatableResponse get(String routerRef) {
-    return given()
-        .contentType("application/json")
-        .pathParam("routerRef", routerRef)
-        .when().get("/routers/{routerRef}")
-        .then();
+    return get(getSpec(routerRef));
   }
 
   public ValidatableResponse delete(String routerRef) {
-    return given()
-        .contentType("application/json")
-        .pathParam("routerRef", routerRef)
-        .when().delete("/routers/{routerRef}")
-        .then();
+    return delete(getSpec(routerRef));
   }
 
-  public ValidatableResponse create(CreateRouterArg args) {
-    return given()
-        .contentType("application/json")
-        .body(args)
-        .when().post("/routers")
-        .then();
-  }
-
-  public ValidatableResponse update(String routerRef, CreateRouterArg args) {
-    return given()
-        .contentType("application/json")
-        .pathParam("routerRef", routerRef)
-        .body(args)
-        .when().post("/routers/{routerRef}")
-        .then();
+  public ValidatableResponse update(String routerRef, UpdateRouterArg args) {
+    return update(getSpec(routerRef),args);
   }
 
   public ValidatableResponse replace(String routerRef, CreateRouterArg args) {
-    return given()
-        .contentType("application/json")
-        .pathParam("routerRef", routerRef)
-        .body(args)
-        .when().put("/routers/{routerRef}")
-        .then();
+    return replace(getSpec(routerRef),args);
   }
 
+  public ValidatableResponse create(CreateRouterArg args) {
+    return create(createSpec(),args);
+  }
 }

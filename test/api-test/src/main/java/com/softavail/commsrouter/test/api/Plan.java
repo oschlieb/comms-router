@@ -34,49 +34,59 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.ws.rs.core.HttpHeaders;
 
-public class Plan extends Resource {
+public class Plan extends GResource<CreatePlanArg, UpdatePlanArg> {
 
   private static final Logger LOGGER = LogManager.getLogger(Plan.class);
 
   public Plan(HashMap<CommsRouterResource, String> state) {
-    super(state);
+    super(state,"/routers/{routerRef}/plans");
   }
 
   public List<PlanDto> list() {
-    PlanDto[] routers = given()
+    PlanDto[] plans = given()
         .pathParam("routerRef", state().get(CommsRouterResource.ROUTER))
         .when().get("/routers/{routerRef}/plans")
         .then().statusCode(200)
         .extract().as(PlanDto[].class);
-    return Arrays.asList(routers);
+    return Arrays.asList(plans);
   }
 
   public ApiObjectRef replace(CreatePlanArg args) {
     String ref = state().get(CommsRouterResource.PLAN);
-    ApiObjectRef oid = given()
+    ValidatableResponse response = given()
         .contentType("application/json")
         .pathParam("routerRef", state().get(CommsRouterResource.ROUTER))
         .pathParam("ref", ref)
         .body(args)
         .when().put("/routers/{routerRef}/plans/{ref}")
         .then().statusCode(201)
-        .extract()
+        .header(HttpHeaders.ETAG, not(equalTo(null)));
+    
+    ApiObjectRef oid = response.extract()
         .as(ApiObjectRef.class);
     state().put(CommsRouterResource.PLAN, oid.getRef());
+    state().put(CommsRouterResource.EPLAN, response.extract().header(HttpHeaders.ETAG));
+
     return oid;
   }
 
   public ApiObjectRef create(CreatePlanArg args) {
-    ApiObjectRef oid = given().pathParam("routerRef", state().get(CommsRouterResource.ROUTER))
+    ValidatableResponse response = given()
+        .pathParam("routerRef", state().get(CommsRouterResource.ROUTER))
         .contentType("application/json")
         .body(args)
         .when().post("/routers/{routerRef}/plans")
         .then().statusCode(201)
-        .body("ref", not(isEmptyString()))
-        .extract()
+        .header(HttpHeaders.ETAG, not(equalTo(null)))
+        .body("ref", not(isEmptyString()));
+    ApiObjectRef oid = response.extract()
         .as(ApiObjectRef.class);
     String id = oid.getRef();
+    String etag = response.extract().header(HttpHeaders.ETAG);
+    state().put(CommsRouterResource.EPLAN, response.extract().header(HttpHeaders.ETAG));
+    
     state().put(CommsRouterResource.PLAN, id);
     return oid;
   }
@@ -84,14 +94,22 @@ public class Plan extends Resource {
   public void delete() {
     deleteResponse().statusCode(204);
   }
+  
+  public void delete(String ref) {
+    deleteResponse(ref).statusCode(204);
+  }
 
-  public ValidatableResponse deleteResponse() {
-    String ref = state().get(CommsRouterResource.PLAN);
+  public ValidatableResponse deleteResponse(String ref) {
     return given()
         .pathParam("routerRef", state().get(CommsRouterResource.ROUTER))
         .pathParam("ref", ref)
         .when().delete("/routers/{routerRef}/plans/{ref}")
         .then();
+  }
+  
+  public ValidatableResponse deleteResponse() {
+    String ref = state().get(CommsRouterResource.PLAN);
+    return deleteResponse(ref);
   }
 
   public PlanDto get() {
@@ -107,13 +125,16 @@ public class Plan extends Resource {
   }
 
   public ValidatableResponse updateResponse(UpdatePlanArg args) {
-    return given()
+    ValidatableResponse response =  given()
           .contentType("application/json")
           .pathParam("routerRef", state().get(CommsRouterResource.ROUTER))
           .pathParam("ref", state().get(CommsRouterResource.PLAN))
+          .header(HttpHeaders.IF_MATCH, state().get(CommsRouterResource.EPLAN))
           .body(args)
           .when().post("/routers/{routerRef}/plans/{ref}")
           .then();
+    state().put(CommsRouterResource.EPLAN, response.extract().header(HttpHeaders.ETAG));
+    return response;
   }
 
   public void update(UpdatePlanArg args) {

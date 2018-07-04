@@ -26,4 +26,8 @@ public class BadValueException extends CommsRouterException {
     super(message);
   }
 
+  public BadValueException(String message, Throwable ex) {
+    super(message, ex);
+  }
+
 }

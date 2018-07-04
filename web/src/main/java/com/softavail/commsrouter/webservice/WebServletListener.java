@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2017 SoftAvail Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +18,12 @@ package com.softavail.commsrouter.webservice;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.shiro.web.env.EnvironmentLoader;
 
+import java.util.EnumSet;
+import javax.servlet.DispatcherType;
+import javax.servlet.FilterRegistration;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.annotation.WebListener;
@@ -27,7 +32,7 @@ import javax.servlet.annotation.WebListener;
  * Created by @author mapuo on 16.10.17.
  */
 @WebListener
-public class WebServletListener implements ServletContextListener {
+public class WebServletListener extends EnvironmentLoader implements ServletContextListener {
 
   private static final Logger LOGGER = LogManager.getLogger(WebServletListener.class);
 
@@ -37,8 +42,21 @@ public class WebServletListener implements ServletContextListener {
 
   @Override
   public void contextInitialized(ServletContextEvent sce) {
-    applicationContext = new ApplicationContext(sce.getServletContext());
-    sce.getServletContext().setAttribute(APPLICATION_CONTEXT, applicationContext);
+    LOGGER.debug("contextInitialized start");
+
+    try {
+      ServletContext sc = sce.getServletContext();
+
+      applicationContext = new ApplicationContext(sc);
+      sc.setAttribute(APPLICATION_CONTEXT, applicationContext);
+
+      initializeShiro(sc, applicationContext);
+
+    } catch (Exception e) {
+      LOGGER.error("Exception: ", e);
+    }
+
+    LOGGER.debug("contextInitialized end");
   }
 
   @Override
@@ -46,6 +64,20 @@ public class WebServletListener implements ServletContextListener {
     if (applicationContext != null) {
       applicationContext.close();
     }
+  }
+
+
+  private void initializeShiro(ServletContext sc, ApplicationContext appContext) {
+    String shiroConfigLocations = appContext.getConfiguration().getShiroConfigLocations();
+
+    sc.setInitParameter("shiroConfigLocations", shiroConfigLocations);
+
+    FilterRegistration filterRegistration =
+        sc.addFilter("ShiroFilter", "org.apache.shiro.web.servlet.ShiroFilter");
+    filterRegistration.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST,
+        DispatcherType.FORWARD, DispatcherType.INCLUDE, DispatcherType.ERROR), true, "/*");
+
+    initEnvironment(sc);
   }
 
 }

@@ -22,9 +22,14 @@ import com.softavail.commsrouter.app.AppContext;
 import com.softavail.commsrouter.app.TaskDispatcher;
 import com.softavail.commsrouter.domain.dto.mappers.EntityMappers;
 import com.softavail.commsrouter.eval.CommsRouterEvaluatorFactory;
+import com.softavail.commsrouter.eval.RsqlDummyValidator;
+import com.softavail.commsrouter.eval.RsqlSkillValidator;
+import com.softavail.commsrouter.eval.RsqlValidator;
 import com.softavail.commsrouter.jpa.JpaDbFacade;
 import com.softavail.commsrouter.webservice.config.ConfigurationImpl;
 import com.softavail.commsrouter.webservice.config.ManifestConfigurationImpl;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.logging.LoggingFeature;
@@ -43,6 +48,8 @@ import javax.ws.rs.core.Response.Status;
  */
 public class ApplicationContext {
 
+  private static final Logger LOGGER = LogManager.getLogger(ApplicationContext.class);
+
   private final Client client;
   private final AppContext coreContext;
   private final ConfigurationImpl configuration;
@@ -50,6 +57,7 @@ public class ApplicationContext {
 
   public ApplicationContext(ServletContext servletContext) {
     configuration = new ConfigurationImpl(servletContext);
+    LOGGER.debug("configuration: {}", configuration);
     manifest = new ManifestConfigurationImpl(servletContext);
     client = createClient();
 
@@ -58,8 +66,8 @@ public class ApplicationContext {
     EntityMappers mappers = new EntityMappers();
     TaskDispatcher taskDispatcher =
         new TaskDispatcher(db, mappers, configuration, this::handleAssignment);
-
-    coreContext = new AppContext(db, evaluatorFactory, taskDispatcher, mappers);
+    coreContext = new AppContext(db, evaluatorFactory, taskDispatcher, mappers, configuration);
+    evaluatorFactory.setRsqlValidator(createRsqlValidator());
   }
 
   public Client getClient() {
@@ -114,4 +122,11 @@ public class ApplicationContext {
     coreContext.db.close();
   }
 
+  private RsqlValidator createRsqlValidator() {
+    if (configuration.getApiEnableExpressionSkillValidation()) {
+      return new RsqlSkillValidator(coreContext.svc.skill);
+    } else {
+      return new RsqlDummyValidator();
+    }
+  }
 }

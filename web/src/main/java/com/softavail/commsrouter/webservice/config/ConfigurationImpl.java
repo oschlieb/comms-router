@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2017 SoftAvail Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -56,10 +56,16 @@ public class ConfigurationImpl implements CoreConfiguration, Configuration {
   private static final String THREAD_POOL_SHUTDOWN_TIMEOUT =
       "task_dispatcher.thread_pool.shutdown.delaySeconds";
   private static final String QUEUE_RETRY_DELAY_SECONDS = "queue.retry.delaySeconds";
-  private static final String QUEUE_PROCESSOR_EVICTION_DELAY =
-      "queue.remove.idleDelaySeconds";
-  private static final String JPA_OPTIMISTIC_LOCK_RETRY_COUNT =
-      "jpa.optimisticLock.retryCount";
+  private static final String QUEUE_PROCESSOR_EVICTION_DELAY = "queue.remove.idleDelaySeconds";
+  private static final String JPA_OPTIMISTIC_LOCK_RETRY_COUNT = "jpa.optimisticLock.retryCount";
+  private static final String API_ENABLE_EXPRESSION_SKILL_VALIDATION =
+      "api.enableExpressionSkillValidation";
+  private static final String API_ENABLE_ENABLE_AGENT_CAPABILITIES_VALIDATION =
+      "api.enableAgentCapabilitiesValidation";
+  private static final String API_ENABLE_ENABLE_TASK_REQUIREMENTS_VALIDATION =
+      "api.enableTaskRequirementsValidation";
+
+  private static final String SHIRO_CONFIG_LOCATIONS = "shiro.configLocations";
 
   private static final Properties defaultProperties;
 
@@ -82,6 +88,12 @@ public class ConfigurationImpl implements CoreConfiguration, Configuration {
         String.valueOf(CoreConfiguration.DEFAULT.getQueueProcessRetryDelay()));
     defaultProperties.setProperty(JPA_OPTIMISTIC_LOCK_RETRY_COUNT,
         String.valueOf(CoreConfiguration.DEFAULT.getJpaLockRetryCount()));
+    defaultProperties.setProperty(API_ENABLE_EXPRESSION_SKILL_VALIDATION,
+        String.valueOf(CoreConfiguration.DEFAULT.getApiEnableExpressionSkillValidation()));
+    defaultProperties.setProperty(API_ENABLE_ENABLE_AGENT_CAPABILITIES_VALIDATION,
+        String.valueOf(CoreConfiguration.DEFAULT.getApiEnableAgentCapabilitiesValidation()));
+    defaultProperties.setProperty(API_ENABLE_ENABLE_TASK_REQUIREMENTS_VALIDATION,
+        String.valueOf(CoreConfiguration.DEFAULT.getApiEnableTaskRequirementsValidation()));
 
     defaultProperties.setProperty(CLIENT_TIMEOUT_CONNECT,
         String.valueOf(Configuration.DEFAULT.getClientConnectTimeout()));
@@ -89,38 +101,34 @@ public class ConfigurationImpl implements CoreConfiguration, Configuration {
         String.valueOf(Configuration.DEFAULT.getClientReadTimeout()));
     defaultProperties.setProperty(CLIENT_FOLLOW_REDIRECTS,
         String.valueOf(Configuration.DEFAULT.getClientFollowRedirects()));
+    defaultProperties.setProperty(SHIRO_CONFIG_LOCATIONS,
+        String.valueOf(Configuration.DEFAULT.getShiroConfigLocations()));
   }
 
   private final ConfigurationProvider provider;
 
   public ConfigurationImpl(ServletContext servletContext) {
     ConfigurationSource configurationSource = getConfigFileParam(servletContext)
-        .map(this::getConfigurationSource)
-        .orElse(new EmptyConfigurationSource());
+        .map(this::getConfigurationSource).orElse(new EmptyConfigurationSource());
 
     ConfigurationSource master = new SkipMissingConfigurationSource(
-        new InMemoryConfigurationSource(defaultProperties),
-        configurationSource);
+        new InMemoryConfigurationSource(defaultProperties), configurationSource);
 
     provider = getProvider(master);
   }
 
   private Optional<Path> getConfigFileParam(ServletContext servletContext) {
-    Set<String> configFileParams = Sets.newHashSet(
-        servletContext.getInitParameter(Configuration.SYSTEM_PROPERTY_KEY),
-        System.getProperty(Configuration.SYSTEM_PROPERTY_KEY));
+    Set<String> configFileParams =
+        Sets.newHashSet(servletContext.getInitParameter(Configuration.SYSTEM_PROPERTY_KEY),
+            System.getProperty(Configuration.SYSTEM_PROPERTY_KEY));
 
-    return configFileParams.stream()
-        .filter(Objects::nonNull)
-        .map(Paths::get)
-        .filter(p -> p.toFile().exists())
-        .findFirst();
+    return configFileParams.stream().filter(Objects::nonNull).map(Paths::get)
+        .filter(p -> p.toFile().exists()).findFirst();
   }
 
   private ConfigurationSource getConfigurationSource(Path configFilePath) {
 
-    ConfigFilesProvider configFilesProvider = () ->
-        ImmutableList.of(configFilePath);
+    ConfigFilesProvider configFilesProvider = () -> ImmutableList.of(configFilePath);
 
     if (configFilePath.isAbsolute()) {
       LOGGER.debug("loading config from: {}", configFilePath);
@@ -132,9 +140,7 @@ public class ConfigurationImpl implements CoreConfiguration, Configuration {
   }
 
   private ConfigurationProvider getProvider(ConfigurationSource configurationSource) {
-    return new ConfigurationProviderBuilder()
-        .withConfigurationSource(configurationSource)
-        .build();
+    return new ConfigurationProviderBuilder().withConfigurationSource(configurationSource).build();
   }
 
   @Override
@@ -150,6 +156,26 @@ public class ConfigurationImpl implements CoreConfiguration, Configuration {
   @Override
   public Boolean getClientFollowRedirects() {
     return provider.getProperty(CLIENT_FOLLOW_REDIRECTS, Boolean.class);
+  }
+
+  @Override
+  public Boolean getApiEnableExpressionSkillValidation() {
+    return provider.getProperty(API_ENABLE_EXPRESSION_SKILL_VALIDATION, Boolean.class);
+  }
+
+  @Override
+  public Boolean getApiEnableAgentCapabilitiesValidation() {
+    return provider.getProperty(API_ENABLE_ENABLE_AGENT_CAPABILITIES_VALIDATION, Boolean.class);
+  }
+
+  @Override
+  public Boolean getApiEnableTaskRequirementsValidation() {
+    return provider.getProperty(API_ENABLE_ENABLE_TASK_REQUIREMENTS_VALIDATION, Boolean.class);
+  }
+
+  @Override
+  public String getShiroConfigLocations() {
+    return provider.getProperty(SHIRO_CONFIG_LOCATIONS, String.class);
   }
 
   @Override
@@ -190,6 +216,14 @@ public class ConfigurationImpl implements CoreConfiguration, Configuration {
   @Override
   public Integer getJpaLockRetryCount() {
     return provider.getProperty(JPA_OPTIMISTIC_LOCK_RETRY_COUNT, Integer.class);
+  }
+
+  @Override
+  public String toString() {
+    final StringBuilder sb = new StringBuilder("ConfigurationImpl{");
+    sb.append("provider=").append(provider.allConfigurationAsProperties());
+    sb.append('}');
+    return sb.toString();
   }
 
 }

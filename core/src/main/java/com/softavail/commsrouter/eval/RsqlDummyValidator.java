@@ -1,5 +1,5 @@
-/* 
- * Copyright 2017 SoftAvail Inc.
+/*
+ * Copyright 2018 SoftAvail Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,20 +14,24 @@
  * limitations under the License.
  */
 
-package com.softavail.commsrouter.api.exception;
+package com.softavail.commsrouter.eval;
+
+import com.softavail.commsrouter.api.exception.ExpressionException;
+import cz.jirutka.rsql.parser.ast.Node;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  *
- * @author Ergyun Syuleyman
+ * @author vladislav
  */
-public class EvaluatorException extends CommsRouterException {
+public class RsqlDummyValidator implements RsqlValidator {
 
-  public EvaluatorException(String message) {
-    super(message);
-  }
+  private static final Logger LOGGER = LogManager.getLogger(RsqlSkillValidator.class);
 
-  public EvaluatorException(String message, Throwable cause) {
-    super(message, cause);
+  @Override
+  public void validate(Node node, String routerRef)
+      throws ExpressionException {
   }
 
 }

@@ -32,6 +32,7 @@ import com.softavail.commsrouter.app.AgentDispatchInfo;
 import com.softavail.commsrouter.app.AppContext;
 import com.softavail.commsrouter.domain.Agent;
 import com.softavail.commsrouter.domain.AgentQueueMapping;
+import com.softavail.commsrouter.domain.AttributeGroup;
 import com.softavail.commsrouter.domain.Queue;
 import com.softavail.commsrouter.domain.Router;
 import com.softavail.commsrouter.eval.CommsRouterEvaluator;
@@ -86,10 +87,13 @@ public class CoreAgentService extends CoreRouterObjectService<AgentDto, Agent>
   }
 
   private ApiObjectRef doCreate(EntityManager em, CreateAgentArg createArg,
-      RouterObjectRef objectRef)
-      throws CommsRouterException {
+      RouterObjectRef objectRef) throws CommsRouterException {
 
     app.db.router.lockConfigByRef(em, objectRef.getRouterRef());
+
+    // validate capabilities
+    app.validators.agentCapabilitiesValidator.validate(createArg.getCapabilities(),
+        objectRef.getRouterRef());
 
     Router router = getRouter(em, objectRef);
     Agent agent = new Agent(objectRef);
@@ -100,20 +104,23 @@ public class CoreAgentService extends CoreRouterObjectService<AgentDto, Agent>
     agent.setCapabilities(app.entityMapper.attributes.fromDto(createArg.getCapabilities()));
     agent.setState(AgentState.offline);
     em.persist(agent);
-    attachQueues(em, agent, createArg.getCapabilities(), true);
+    attachQueues(em, agent, true);
     return agent.cloneApiObjectRef();
   }
 
-  void attachQueues(EntityManager em, Agent agent, AttributeGroupDto capabilities,
-      boolean isNewAgent) throws CommsRouterException {
+  void attachQueues(EntityManager em, Agent agent, boolean isNewAgent) throws CommsRouterException {
 
     LOGGER.info("Agent {}: attaching queues...", agent.getRef());
 
+    final AttributeGroup capabilities = agent.getCapabilities();
+
     int attachedQueuesCount = 0;
-    CommsRouterEvaluator evaluator = app.evaluatorFactory.provide(null);
+    CommsRouterEvaluator evaluator = app.evaluatorFactory.provide(null, null);
     for (Queue queue : app.db.queue.list(em, agent.getRouter().getRef())) {
       try {
-        if (evaluator.init(queue.getPredicate()).evaluate(capabilities)) {
+        CommsRouterEvaluator changeExpression =
+            evaluator.changeExpression(queue.getPredicate(), queue.getRouter().getRef());
+        if (changeExpression.evaluate(capabilities)) {
 
           LOGGER.info("Queue {} <=> Agent {}", queue.getRef(), agent.getRef());
           ++attachedQueuesCount;
@@ -174,8 +181,7 @@ public class CoreAgentService extends CoreRouterObjectService<AgentDto, Agent>
   private AgentDispatchInfo updateAgent(UpdateAgentArg updateArg, RouterObjectRef objectRef)
       throws CommsRouterException {
 
-    if (updateArg.getState() == AgentState.busy
-        || updateArg.getState() == AgentState.unavailable) {
+    if (updateArg.getState() == AgentState.busy || updateArg.getState() == AgentState.unavailable) {
       throw new BadValueException(
           "Setting agent state to '" + updateArg.getState() + "' not allowed");
     }
@@ -184,18 +190,25 @@ public class CoreAgentService extends CoreRouterObjectService<AgentDto, Agent>
 
       Agent agent;
       if (updateArg.getCapabilities() != null) {
+
+        // validate capabilities
+        app.validators.agentCapabilitiesValidator.validate(updateArg.getCapabilities(),
+            objectRef.getRouterRef());
+
         // ! get the agent after the router config lock
         app.db.router.lockConfigByRef(em, objectRef.getRouterRef());
         agent = app.db.agent.get(em, objectRef);
+        checkResourceVersion(agent, objectRef);
         updateCapabilities(em, agent, updateArg.getCapabilities());
       } else {
         agent = app.db.agent.get(em, objectRef);
+        checkResourceVersion(agent, objectRef);
       }
 
-      boolean agentBecameAvailable = updateState(agent, updateArg.getState());
       Fields.update(agent::setAddress, agent.getAddress(), updateArg.getAddress());
       Fields.update(agent::setName, agent.getName(), updateArg.getName());
       Fields.update(agent::setDescription, agent.getDescription(), updateArg.getDescription());
+      boolean agentBecameAvailable = updateState(agent, updateArg.getState());
       if (!agentBecameAvailable) {
         return null;
       }
@@ -248,7 +261,7 @@ public class CoreAgentService extends CoreRouterObjectService<AgentDto, Agent>
 
     agent.setCapabilities(app.entityMapper.attributes.fromDto(newCapabilities));
     agent.getAgentQueueMappings().clear();
-    attachQueues(em, agent, newCapabilities, false);
+    attachQueues(em, agent, false);
   }
 
   @Override

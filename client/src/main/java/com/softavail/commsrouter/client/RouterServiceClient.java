@@ -30,6 +30,7 @@ import com.softavail.commsrouter.api.interfaces.RouterService;
 import java.util.List;
 import javax.inject.Inject;
 import javax.ws.rs.client.Client;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.UriBuilder;
 
 /**
@@ -74,7 +75,7 @@ public class RouterServiceClient extends ServiceClientBase<RouterDto, ApiObjectR
   }
 
   @Override
-  public void update(UpdateRouterArg updateArg, String ref)
+  public void update(UpdateRouterArg updateArg, ApiObjectRef ref)
       throws NotFoundException {
 
     post(updateArg, ref);
@@ -89,7 +90,7 @@ public class RouterServiceClient extends ServiceClientBase<RouterDto, ApiObjectR
 
   @Override
   public PaginatedList<RouterDto> list(PagingRequest request) {
-    return getList(request);
+    return getList(request, new GenericType<List<RouterDto>>() {});
   }
 
   @Override

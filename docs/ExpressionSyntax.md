@@ -15,7 +15,7 @@ And a Plan filter expression looks like:
 "#{customer_value} == 'Gold' && #{type} == 'ticket'"
 ```
 
-## Expression Structure	
+## Expression Structure 
 Expressions are made up of simple comparisons of constants and/or JSON keys, grouped together by parenthesis functions, and logical operators.
 
 Examples:

@@ -39,6 +39,7 @@ import org.apache.logging.log4j.Logger;
 import java.net.URI;
 import java.net.URL;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.validation.Valid;
 import javax.validation.constraints.Max;
@@ -48,6 +49,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -56,10 +58,13 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.container.ResourceContext;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriBuilder;
 
@@ -88,14 +93,15 @@ public class RouterResource {
       responseContainer = "List",
       tags = "routers")
   @ApiResponses(
-      @ApiResponse(
-          code = 200,
-          message = "Successful operation",
-          responseHeaders = {
-              @ResponseHeader(
-                  name = PaginatedService.NEXT_TOKEN_HEADER,
-                  description = "The token for the next page",
-                  response = String.class)}))
+      @ApiResponse(code = 200, message = "Successful operation", responseHeaders = {
+          @ResponseHeader(
+              name = PaginatedService.NEXT_TOKEN_HEADER,
+              description = "The token for the next page",
+              response = String.class),
+          @ResponseHeader(
+              name = HttpHeaders.ETAG,
+              description = "ETags of the resources in the list separated by semicolon",
+              response = String.class)}))
   public Response list(
       @ApiParam(
           value = "The token from the previous request",
@@ -113,8 +119,8 @@ public class RouterResource {
       @QueryParam(PaginatedService.ITEMS_PER_PAGE_PARAM) int perPage,
       @Valid
       @Pattern(regexp = PaginationHelper.SORT_REGEX, message = "{resource.list.sort.message}")
-      @QueryParam("sort") String sort,
-      @QueryParam("q") String query)
+      @QueryParam(PaginatedService.SORT_PARAM) String sort,
+      @QueryParam(PaginatedService.QUERY_PARAM) String query)
       throws CommsRouterException {
 
     PagingRequest pagingRequest = new PagingRequest(token, perPage, sort, query);
@@ -126,8 +132,13 @@ public class RouterResource {
     GenericEntity<List<RouterDto>> genericEntity =
         new GenericEntity<>(pagedList.getList(), List.class);
 
+    String tags = pagedList.getList().stream()
+        .map(ApiObjectRef::getHash)
+        .collect(Collectors.joining(";"));
+
     return Response.ok()
         .header(PaginatedService.NEXT_TOKEN_HEADER, pagedList.getNextToken())
+        .tag(new EntityTag(tags))
         .entity(genericEntity)
         .type(MediaType.APPLICATION_JSON_TYPE)
         .build();
@@ -135,18 +146,43 @@ public class RouterResource {
 
   @GET
   @Path("{id}")
-  @ApiOperation(value = "Find router by ID", notes = "Searches all routers by the given ID",
-      response = RouterDto.class, tags = "routers")
-  @ApiResponses({@ApiResponse(code = 200, message = "Successful operation"),
+  @ApiOperation(
+      value = "Find router by ID",
+      notes = "Searches all routers by the given ID",
+      response = RouterDto.class,
+      tags = "routers")
+  @ApiResponses({
+      @ApiResponse(code = 200, message = "Successful operation", responseHeaders = {
+          @ResponseHeader(name = HttpHeaders.ETAG, description = "ETag of the resource",
+              response = String.class)}),
+      @ApiResponse(code = 304, message = "Not Modified", responseHeaders = {
+          @ResponseHeader(name = HttpHeaders.ETAG, description = "ETag of the resource",
+              response = String.class)}),
       @ApiResponse(code = 404, message = "Router with the provided id is not found",
           response = ExceptionPresentation.class)})
-  public RouterDto get(
-      @ApiParam(value = "ID of the router to be searched") @PathParam("id") String id)
+  public Response get(
+      @Context Request request,
+      @ApiParam(value = "ETag header provided when creating or retrieving resource")
+      @HeaderParam(HttpHeaders.IF_NONE_MATCH) String ifNoneMatch,
+      @ApiParam(value = "ID of the router to be searched")
+      @PathParam("id") String id)
       throws CommsRouterException {
 
     LOGGER.debug("Looking for router with ref: {}", id);
 
-    return routerService.get(id);
+    RouterDto routerDto = routerService.get(id);
+    EntityTag entityTag = new EntityTag(routerDto.getHash());
+
+    ResponseBuilder builder = request.evaluatePreconditions(entityTag);
+
+    if (builder != null) {
+      return builder.build();
+    }
+
+    return Response.ok()
+        .tag(entityTag)
+        .entity(routerDto)
+        .build();
   }
 
   @POST
@@ -157,14 +193,14 @@ public class RouterResource {
       code = 201,
       tags = "routers")
   @ApiResponses(
-      @ApiResponse(code = 201, message = "Created",
-          responseHeaders = @ResponseHeader(
-              name = HttpHeaders.LOCATION,
-              response = URL.class,
-              description = "The path to the newly created resource")))
+      @ApiResponse(code = 201, message = "Created", responseHeaders = {
+          @ResponseHeader(name = HttpHeaders.LOCATION, response = URL.class,
+              description = "The path to the newly created resource"),
+          @ResponseHeader(name = HttpHeaders.ETAG, response = String.class,
+              description = "ETag of the resource")}))
   public Response create(
-      @ApiParam(value = "Router object that needs to be added to the list of routers",
-          required = true) CreateRouterArg routerArg)
+      @ApiParam(value = "Router object to be added to the list of routers", required = true)
+          CreateRouterArg routerArg)
       throws CommsRouterException {
 
     LOGGER.debug("Creating router: {}", routerArg);
@@ -176,6 +212,7 @@ public class RouterResource {
 
     return Response.status(Status.CREATED)
         .header(HttpHeaders.LOCATION, createLocation.toString())
+        .tag(new EntityTag(router.getHash()))
         .entity(new ApiObjectRef(router))
         .build();
   }
@@ -184,23 +221,41 @@ public class RouterResource {
   @Path("{id}")
   @ApiOperation(value = "Update an existing router properties", tags = "routers")
   @ApiResponses({
-      @ApiResponse(code = 204, message = "Successful operation"),
+      @ApiResponse(code = 204, message = "Successful operation", responseHeaders = {
+          @ResponseHeader(name = HttpHeaders.ETAG, response = String.class,
+              description = "ETag of the resource")}),
       @ApiResponse(code = 400, message = "Invalid ID supplied",
           response = ExceptionPresentation.class),
       @ApiResponse(code = 404, message = "Router not found",
           response = ExceptionPresentation.class),
       @ApiResponse(code = 405, message = "Validation exception",
+          response = ExceptionPresentation.class),
+      @ApiResponse(code = 412, message = "Precondition Failed",
           response = ExceptionPresentation.class)})
-  public void update(
-      @ApiParam(value = "The id of the router to be updated",
-          required = true) @PathParam("id") String id,
-      @ApiParam(value = "UpdateRouterArg object specifying parameters to be updated",
-          required = true) UpdateRouterArg routerArg)
+  public Response update(
+      @ApiParam(value = "ETag header from creating or retrieving resource", required = true)
+      @HeaderParam(HttpHeaders.IF_MATCH)
+          String ifMatch,
+      @ApiParam(value = "The id of the router to be updated", required = true)
+      @PathParam("id")
+          String id,
+      @ApiParam(
+          value = "UpdateRouterArg object specifying parameters to be updated",
+          required = true)
+          UpdateRouterArg routerArg)
       throws CommsRouterException {
 
     LOGGER.debug("Updating router: {}", routerArg);
 
-    routerService.update(routerArg, id);
+    ApiObjectRef objectRef = new ApiObjectRef(id);
+    objectRef.setHash(ifMatch);
+
+    routerService.update(routerArg, objectRef);
+    RouterDto updatedRouter = routerService.get(id);
+
+    return Response.status(Status.NO_CONTENT)
+        .tag(new EntityTag(updatedRouter.getHash()))
+        .build();
   }
 
   @PUT
@@ -209,14 +264,17 @@ public class RouterResource {
       value = "Replace an existing router",
       notes = "If the router with the specified id does not exist, it creates it",
       tags = "routers")
-  @ApiResponses({@ApiResponse(code = 200, message = "Successful operation"),
+  @ApiResponses({
+      @ApiResponse(code = 200, message = "Successful operation", responseHeaders = {
+          @ResponseHeader(name = HttpHeaders.ETAG, response = String.class,
+              description = "ETag of the resource")}),
       @ApiResponse(code = 400, message = "Invalid ID supplied",
           response = ExceptionPresentation.class),
       @ApiResponse(code = 404, message = "Router not found",
           response = ExceptionPresentation.class),
       @ApiResponse(code = 405, message = "Validation exception",
           response = ExceptionPresentation.class)})
-  public Response put(
+  public Response replace(
       @ApiParam(
           value = "The id of the router to be updated",
           required = true) @PathParam("ref") String ref,
@@ -233,6 +291,7 @@ public class RouterResource {
 
     return Response.status(Status.CREATED)
         .header(HttpHeaders.LOCATION, createLocation.toString())
+        .tag(new EntityTag(router.getHash()))
         .entity(router)
         .build();
   }
@@ -316,6 +375,22 @@ public class RouterResource {
     resource.setRouterRef(routerRef);
     UriBuilder agentResource =
         UriBuilder.fromResource(this.getClass()).path(this.getClass(), "agentResource");
+    resource.setEntryPoint(agentResource);
+    return resource;
+  }
+
+  @Path("{routerRef}/skills")
+  @ApiOperation(
+      value = "Skills sub-resource",
+      response = AgentResource.class,
+      tags = "skills")
+  public SkillResource skillResource(@PathParam("routerRef") String routerRef) {
+    LOGGER.debug("Router {} skills", routerRef);
+
+    SkillResource resource = resourceContext.getResource(SkillResource.class);
+    resource.setRouterRef(routerRef);
+    UriBuilder agentResource =
+        UriBuilder.fromResource(this.getClass()).path(this.getClass(), "skillResource");
     resource.setEntryPoint(agentResource);
     return resource;
   }

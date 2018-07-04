@@ -19,10 +19,12 @@ package com.softavail.commsrouter.test.api;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.isEmptyString;
 import static org.hamcrest.Matchers.not;
 
 import com.softavail.commsrouter.api.dto.arg.CreateQueueArg;
+import com.softavail.commsrouter.api.dto.arg.UpdateQueueArg;
 import com.softavail.commsrouter.api.dto.model.ApiObjectRef;
 import com.softavail.commsrouter.api.dto.model.QueueDto;
 import com.softavail.commsrouter.api.dto.model.TaskDto;
@@ -34,12 +36,14 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-public class Queue extends Resource {
+import javax.ws.rs.core.HttpHeaders;
+
+public class Queue extends GResource<CreateQueueArg, UpdateQueueArg> {
 
   private static final Logger LOGGER = LogManager.getLogger(Queue.class);
 
   public Queue(HashMap<CommsRouterResource, String> state) {
-    super(state);
+    super(state,"/routers/{routerRef}/queues");
   }
 
   public List<QueueDto> list() {
@@ -55,13 +59,17 @@ public class Queue extends Resource {
 
   public ValidatableResponse replaceResponse(CreateQueueArg args) {
     String ref = state().get(CommsRouterResource.QUEUE);
-    return given()
+    ValidatableResponse response =  given()
+        .header(HttpHeaders.IF_MATCH, state().get(CommsRouterResource.EQUEUE))
         .contentType("application/json")
         .pathParam("routerRef", state().get(CommsRouterResource.ROUTER))
         .pathParam("ref", ref)
         .body(args)
         .when().put("/routers/{routerRef}/queues/{ref}")
-        .then();
+        .then()
+        .header(HttpHeaders.ETAG, not(equalTo(null)));
+    state().put(CommsRouterResource.EQUEUE, response.extract().header(HttpHeaders.ETAG));
+    return response;
   }
 
   public ApiObjectRef replace(CreateQueueArg args) {
@@ -75,28 +83,34 @@ public class Queue extends Resource {
   }
 
   public ApiObjectRef create(CreateQueueArg args) {
-
-    ApiObjectRef oid = given()
+    ValidatableResponse response = given()
         .pathParam("routerRef", state().get(CommsRouterResource.ROUTER))
         .contentType("application/json")
         .body(args)
         .when().post("/routers/{routerRef}/queues")
         .then().statusCode(201)
         .body("id", not(isEmptyString()))
-        .extract()
+        .header(HttpHeaders.ETAG, not(equalTo(null)));
+    
+    ApiObjectRef oid = response.extract()
         .as(ApiObjectRef.class);
     String id = oid.getRef();
     state().put(CommsRouterResource.QUEUE, id);
+    state().put(CommsRouterResource.EQUEUE, response.extract().header(HttpHeaders.ETAG));
     return oid;
   }
 
-  public void delete() {
-    String ref = state().get(CommsRouterResource.QUEUE);
+  public void delete(String ref) {
     given()
         .pathParam("routerRef", state().get(CommsRouterResource.ROUTER))
         .pathParam("ref", ref)
         .when().delete("/routers/{routerRef}/queues/{ref}")
         .then().statusCode(204);
+  }
+
+  public void delete() {
+    String ref = state().get(CommsRouterResource.QUEUE);
+    delete(ref);
   }
 
   public QueueDto get() {
@@ -106,6 +120,7 @@ public class Queue extends Resource {
         .pathParam("ref", ref)
         .when().get("/routers/{routerRef}/queues/{ref}")
         .then().statusCode(200)
+        .header(HttpHeaders.ETAG, not(equalTo(null)))
         .body("ref", equalTo(ref)).extract().as(QueueDto.class);
   }
 
@@ -114,6 +129,13 @@ public class Queue extends Resource {
     return given().pathParam("routerRef", state().get(CommsRouterResource.ROUTER))
         .pathParam("ref", ref).when().get("/routers/{routerRef}/queues/{ref}/size").then()
         .statusCode(200).extract().path("size");
+  }
+
+  public void checkSize(Integer size) {
+    String ref = state().get(CommsRouterResource.QUEUE);
+    given().pathParam("routerRef", state().get(CommsRouterResource.ROUTER))
+      .pathParam("ref", ref).when().get("/routers/{routerRef}/queues/{ref}/size").then()
+      .statusCode(200).body("size",is(size));
   }
 
   public List<TaskDto> tasks() {
@@ -130,12 +152,14 @@ public class Queue extends Resource {
 
   public void update(CreateQueueArg args) {
     String ref = state().get(CommsRouterResource.QUEUE);
-    given()
+    ValidatableResponse response = given()
+        .header(HttpHeaders.IF_MATCH, state().get(CommsRouterResource.EQUEUE))
         .contentType("application/json")
         .pathParam("routerRef", state().get(CommsRouterResource.ROUTER))
         .pathParam("ref", ref)
         .body(args)
         .when().post("/routers/{routerRef}/queues/{ref}")
         .then().statusCode(204);
+    state().put(CommsRouterResource.EQUEUE, response.extract().header(HttpHeaders.ETAG));
   }
 }

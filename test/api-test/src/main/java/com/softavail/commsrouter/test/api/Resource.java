@@ -17,7 +17,10 @@
 
 package com.softavail.commsrouter.test.api;
 
+import static io.restassured.RestAssured.given;
+
 import io.restassured.RestAssured;
+import io.restassured.specification.RequestSpecification;
 
 import java.util.HashMap;
 
@@ -40,12 +43,33 @@ public class Resource {
       // you can specify it using -DautHost=http://localhost:8080
       RestAssured.baseURI = System.getProperty("autHost");
     }
-    RestAssured.basePath = "/comms-router-web/api";
+    if (System.getProperty("autPath") == null) {
+      String host = env.get("AUT_PATH");
+      if (host != null) {
+        RestAssured.basePath = host;
+      } else {
+        RestAssured.basePath = "/comms-router-web/api";
+      }
+    } else {
+      RestAssured.basePath = System.getProperty("autPath");
+    }
+
     this.state = state;
   }
 
   public HashMap<CommsRouterResource, String> state() {
     return this.state;
   }
-
+  
+  protected RequestSpecification req() {
+    return given()
+      .contentType("application/json");
+  }
+  
+  protected RequestSpecification req(RequestSpecification spec) {
+    return given()
+      .contentType("application/json")
+      .spec(spec);
+  }
+  
 }

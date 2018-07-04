@@ -19,9 +19,12 @@ package com.softavail.api.test;
 import com.softavail.commsrouter.test.api.Agent;
 import com.softavail.commsrouter.test.api.CommsRouterResource;
 import com.softavail.commsrouter.test.api.Plan;
+import com.softavail.commsrouter.test.api.Skill;
 import com.softavail.commsrouter.test.api.Router;
+import com.softavail.commsrouter.test.api.ApiRouter;
 import com.softavail.commsrouter.test.api.Task;
 import com.softavail.commsrouter.test.api.Queue;
+import com.softavail.commsrouter.test.api.ApiQueue;
 
 import org.junit.*;
 
@@ -40,7 +43,9 @@ import java.util.Collections;
 import com.softavail.commsrouter.api.dto.arg.CreateAgentArg;
 import com.softavail.commsrouter.api.dto.arg.CreatePlanArg;
 import com.softavail.commsrouter.api.dto.arg.CreateRouterArg;
+import com.softavail.commsrouter.api.dto.arg.UpdateRouterArg;
 import com.softavail.commsrouter.api.dto.arg.CreateTaskArg;
+import com.softavail.commsrouter.api.dto.arg.CreateSkillArg;
 import com.softavail.commsrouter.api.dto.arg.CreateQueueArg;
 import com.softavail.commsrouter.api.dto.model.attribute.AttributeGroupDto;
 import com.softavail.commsrouter.api.dto.model.ApiObjectRef;
@@ -53,9 +58,32 @@ import com.softavail.commsrouter.api.dto.model.RouterDto;
 import com.softavail.commsrouter.api.dto.model.TaskDto;
 
 import java.util.HashMap;
+import java.util.List;
+import java.util.stream.Stream;
+import java.util.Collections;
+import java.util.stream.Collectors;
+import com.softavail.commsrouter.api.dto.model.*;
+import com.softavail.commsrouter.api.dto.model.skill.*;
 
 /** Unit test for simple App. */
 public class BaseRouterTest extends BaseTest{
+
+  private Skill s = null;
+
+  private void createSkill(HashMap<CommsRouterResource, String> state) {
+    List<NumberInterval> intervals = Stream.of(new NumberInterval(new NumberIntervalBoundary(1.0),new NumberIntervalBoundary(2.0)),
+                                               new NumberInterval(new NumberIntervalBoundary(2.0),new NumberIntervalBoundary(3.0)),
+                                               new NumberInterval(new NumberIntervalBoundary(4.0,false),new NumberIntervalBoundary(50.0,true))
+                                               ).collect(Collectors.toList());
+    s  = new Skill(state);
+    
+    s.replace("num", new CreateSkillArg.Builder()
+              .name("num")
+              .description("age domain")
+              .domain( new NumberAttributeDomainDto(intervals))
+              .multivalue(false)
+              .build());
+  }
 
   @Test
   public void createRouter() {
@@ -85,8 +113,10 @@ public class BaseRouterTest extends BaseTest{
     CreateRouterArg routerArg = new CreateRouterArg();
     routerArg.setDescription(description);
     routerArg.setName(name);
+    ApiRouter api_r = new ApiRouter(state);
+    
+    api_r.replace(routerId, routerArg).statusCode(201);
     state.put(CommsRouterResource.ROUTER, routerId);
-    ApiObjectRef ref = r.replace(routerArg);
 
     RouterDto router = r.get();
     assertThat(router.getName(), is(name));
@@ -120,7 +150,7 @@ public class BaseRouterTest extends BaseTest{
     r.delete();
   }
 
-  // @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked")
   @Test
   public void replaceRouterRouterResourcesAreThere() {
     // replace existing router and check that Queue is here after the replacement
@@ -140,7 +170,9 @@ public class BaseRouterTest extends BaseTest{
     ApiObjectRef qRef = q.create(new CreateQueueArg.Builder().predicate("1==1").build());
 
     // replace with null values
-    r.replaceResponse(new CreateRouterArg())
+    ApiRouter api_r = new ApiRouter(state);
+    
+    api_r.replace(state.get(CommsRouterResource.ROUTER),new CreateRouterArg())
         .statusCode(500)
         .body(
             "error.description",
@@ -171,21 +203,21 @@ public class BaseRouterTest extends BaseTest{
     assertThat(router.getName(), is(name));
     assertThat(router.getDescription(), is(description));
 
-    r.update(new CreateRouterArg()); // should not change values
+    r.update(new UpdateRouterArg()); // should not change values
     router = r.get();
     assertThat(router.getName(), is(name));
     assertThat(router.getDescription(), is(description));
-
-    routerArg.setDescription("changed");
-    routerArg.setName(null);
-    r.update(routerArg); // should change only description
+    UpdateRouterArg uRouterArg = new UpdateRouterArg();
+    uRouterArg.setDescription("changed");
+    uRouterArg.setName(null);
+    r.update(uRouterArg); // should change only description
     router = r.get();
     assertThat(router.getName(), is(name));
     assertThat(router.getDescription(), is("changed"));
 
-    routerArg.setDescription(null);
-    routerArg.setName("changedName");
-    r.update(routerArg); // should change only description
+    uRouterArg.setDescription(null);
+    uRouterArg.setName("changedName");
+    r.update(uRouterArg); // should change only description
     router = r.get();
     assertThat(router.getName(), is("changedName"));
     assertThat(router.getDescription(), is("changed"));
@@ -215,27 +247,34 @@ public class BaseRouterTest extends BaseTest{
     Router r = new Router(state);
     ApiObjectRef router1 = r.create(new CreateRouterArg());
     ApiObjectRef router2 = r.create(new CreateRouterArg());
+    createSkill(state);
+    
     Queue q = new Queue(state);
 
     String description1 = "queue1 description";
     String predicate1 = "1==1";
     String description2 = "queue2 description";
-    String predicate2 = "2==2";
+    String predicate2 = "num==2";
     String queueRef = "Queue-ref";
 
     state.put(CommsRouterResource.QUEUE, queueRef);
 
     state.put(CommsRouterResource.ROUTER, router1.getRef());
-    q.replace(new CreateQueueArg.Builder()
+
+    ApiQueue api_q = new ApiQueue(state);
+
+    api_q.replace(router1.getRef(), queueRef, new CreateQueueArg.Builder()
               .description(description1)
               .predicate(predicate1)
-              .build());
+                  .build())
+      .statusCode(201);
 
     state.put(CommsRouterResource.ROUTER, router2.getRef());
-    q.replace(new CreateQueueArg.Builder()
-              .description(description2)
-              .predicate(predicate2)
-              .build());
+    api_q.replace(router2.getRef(), queueRef, new CreateQueueArg.Builder()
+                  .description(description2)
+                  .predicate(predicate2)
+                  .build())
+      .statusCode(201);
 
     state.put(CommsRouterResource.ROUTER, router1.getRef());
     QueueDto queue = q.get();
